@@ -137,7 +137,7 @@ def fetch_fred_data() -> pd.DataFrame:
             successful += 1
             time.sleep(0.5)
         except Exception as e:
-            print(f"❌ Failed: {str(e)}")
+            print(f" Failed: {str(e)}")
     
     df_fred = pd.DataFrame(fred_data)
     df_fred_quarterly = df_fred.resample('Q').last()
@@ -148,7 +148,7 @@ def fetch_fred_data() -> pd.DataFrame:
     if 'CPI_Inflation' in df_fred_quarterly.columns:
         df_fred_quarterly['CPI_Inflation'] = df_fred_quarterly['CPI_Inflation'].pct_change(4) * 100
     
-    print(f"\n✅ FRED DATA COMPLETE")
+    print(f"\n FRED DATA COMPLETE")
     print(f"   Shape: {df_fred_quarterly.shape}")
     print(f"   Quarters: {len(df_fred_quarterly)}")
     print(f"   Date range: {df_fred_quarterly.index[0]} to {df_fred_quarterly.index[-1]}")
@@ -179,13 +179,13 @@ def fetch_market_data() -> pd.DataFrame:
                     close_data = close_data.iloc[:, 0]
                 
                 market_data[name] = close_data
-                print(f"✅ {len(data)} daily records")
+                print(f" {len(data)} daily records")
             else:
-                print(f"❌ No data returned")
+                print(f" No data returned")
                 
             time.sleep(1)
         except Exception as e:
-            print(f"❌ Failed: {str(e)}")
+            print(f" Failed: {str(e)}")
     
     if not market_data:
         print("⚠️  WARNING: No market data collected.")
@@ -200,7 +200,7 @@ def fetch_market_data() -> pd.DataFrame:
     if 'SP500' in df_market_quarterly.columns:
         df_market_quarterly['SP500_Return'] = df_market_quarterly['SP500'].pct_change() * 100
     
-    print(f"\n✅ MARKET DATA COMPLETE")
+    print(f"\n MARKET DATA COMPLETE")
     print(f"   Shape: {df_market_quarterly.shape}")
     
     save_intermediate(df_market_quarterly, 'market')
@@ -220,7 +220,7 @@ def fetch_company_financials_historical(ticker: str, company_info: Dict) -> pd.D
         
         # Check if data is empty
         if prices.empty:
-            print(f" ❌ No price data")
+            print(f"  No price data")
             return pd.DataFrame()
         
         # Handle different DataFrame formats from yfinance
@@ -239,7 +239,7 @@ def fetch_company_financials_historical(ticker: str, company_info: Dict) -> pd.D
             missing_cols = [col for col in required_cols if col not in prices.columns]
             
             if missing_cols:
-                print(f" ❌ Missing columns: {missing_cols}")
+                print(f"  Missing columns: {missing_cols}")
                 return pd.DataFrame()
         
         # Resample to quarterly
@@ -253,7 +253,7 @@ def fetch_company_financials_historical(ticker: str, company_info: Dict) -> pd.D
         
         # Check if resampled data is valid
         if prices_quarterly.empty or prices_quarterly['Close'].isna().all():
-            print(f" ❌ Empty after resampling")
+            print(f"  Empty after resampling")
             return pd.DataFrame()
         
         # Create dataframe
@@ -354,13 +354,13 @@ def fetch_company_financials_historical(ticker: str, company_info: Dict) -> pd.D
         data = data[data[numeric_cols].notna().any(axis=1)]
         
         if data.empty:
-            print(f" ❌ All data is NaN")
+            print(f"  All data is NaN")
             return pd.DataFrame()
         
         return data
         
     except Exception as e:
-        print(f" ❌ Error: {str(e)}")
+        print(f"  Error: {str(e)}")
         return pd.DataFrame()
 
 def fetch_all_companies() -> pd.DataFrame:
@@ -388,17 +388,17 @@ def fetch_all_companies() -> pd.DataFrame:
         
         if not df.empty:
             all_company_data.append(df)
-            print(f" ✅ {len(df)} quarters")
+            print(f"  {len(df)} quarters")
             successful += 1
         else:
-            print(f" ❌ Failed")
+            print(f"  Failed")
             failed_companies.append(ticker)
         
         time.sleep(1)  # Rate limiting
     
     # Check if we have any data
     if not all_company_data:
-        print(f"\n❌ ERROR: No company data collected!")
+        print(f"\n ERROR: No company data collected!")
         print(f"   All {len(COMPANIES)} companies failed.")
         print(f"   This might be a Yahoo Finance API issue or network problem.")
         print(f"\n💡 Suggestions:")
@@ -410,7 +410,7 @@ def fetch_all_companies() -> pd.DataFrame:
     # Combine all company data
     df_companies = pd.concat(all_company_data, axis=0)
     
-    print(f"\n✅ COMPANY DATA COMPLETE")
+    print(f"\n COMPANY DATA COMPLETE")
     print(f"   Companies: {successful}/25")
     if failed_companies:
         print(f"   ⚠️  Failed: {', '.join(failed_companies)}")
@@ -508,7 +508,7 @@ def save_datasets(df: pd.DataFrame):
     
     processed_path = os.path.join(PROCESSED_DATA_DIR, 'merged_dataset.csv')
     df.to_csv(processed_path, index=False)
-    print(f"   ✅ Saved: {processed_path}")
+    print(f"    Saved: {processed_path}")
     print(f"      Size: {os.path.getsize(processed_path) / 1024:.1f} KB")
     
     summary_path = os.path.join(PROCESSED_DATA_DIR, 'dataset_summary.txt')
@@ -528,19 +528,19 @@ def save_datasets(df: pd.DataFrame):
         for col in df.columns:
             f.write(f"  - {col}\n")
     
-    print(f"   ✅ Saved: {summary_path}")
+    print(f"    Saved: {summary_path}")
 
 def main():
     """Main data collection pipeline"""
     start_time = time.time()
     
     print("\n" + "="*70)
-    print("📊 FINANCIAL STRESS TEST GENERATOR - DATA COLLECTION")
+    print(" FINANCIAL STRESS TEST GENERATOR - DATA COLLECTION")
     print("="*70)
-    print(f"📅 Period: {START_DATE} to {END_DATE}")
-    print(f"🏢 Companies: 25")
-    print(f"📈 Sources: FRED + Yahoo Finance (HISTORICAL)")
-    print(f"💾 Cache enabled: data/raw/")
+    print(f" Period: {START_DATE} to {END_DATE}")
+    print(f" Companies: 25")
+    print(f" Sources: FRED + Yahoo Finance (HISTORICAL)")
+    print(f" Cache enabled: data/raw/")
     print("="*70)
     
     try:
@@ -552,19 +552,19 @@ def main():
         save_datasets(df_final)
         
         elapsed = time.time() - start_time
-        print_section("✅ DATA COLLECTION COMPLETE")
+        print_section(" DATA COLLECTION COMPLETE")
         print(f"   Final dataset shape: {df_final.shape}")
         print(f"   Total features: {df_final.shape[1]}")
         print(f"   Missing values: {df_final.isnull().sum().sum()} ({df_final.isnull().sum().sum() / df_final.size * 100:.1f}%)")
         print(f"   Date range: {df_final['Date'].min()} to {df_final['Date'].max()}")
         print(f"   Companies: {df_final['Company'].nunique()}")
-        print(f"\n   ⏱️  Total execution time: {elapsed:.1f} seconds ({elapsed/60:.1f} minutes)")
-        print(f"\n   💾 Cached data saved in: data/raw/")
-        print(f"   📊 Final dataset saved in: data/processed/")
-        print(f"\n   🎉 SUCCESS! Dataset ready for modeling.")
+        print(f"\n     Total execution time: {elapsed:.1f} seconds ({elapsed/60:.1f} minutes)")
+        print(f"\n    Cached data saved in: data/raw/")
+        print(f"    Final dataset saved in: data/processed/")
+        print(f"\n   SUCCESS! Dataset ready for modeling.")
         
     except Exception as e:
-        print(f"\n❌ ERROR: {str(e)}")
+        print(f"\n ERROR: {str(e)}")
         raise
 
 if __name__ == "__main__":

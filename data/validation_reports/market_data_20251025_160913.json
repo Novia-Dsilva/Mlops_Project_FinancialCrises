@@ -1,0 +1,11 @@
+{
+  "is_valid": true,
+  "data_asset": "market_data",
+  "suite_name": "market_data_suite",
+  "total_expectations": 0,
+  "successful": 0,
+  "failed": 0,
+  "success_rate": 0.0,
+  "failed_expectations": [],
+  "timestamp": "2025-10-25T16:09:13.064217"
+}
