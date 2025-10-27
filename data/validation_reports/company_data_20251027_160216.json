@@ -1,0 +1,11 @@
+{
+  "is_valid": true,
+  "data_asset": "company_data",
+  "suite_name": "company_data_suite",
+  "total_expectations": 9,
+  "successful": 9,
+  "failed": 0,
+  "success_rate": 100.0,
+  "failed_expectations": [],
+  "timestamp": "2025-10-27T16:02:16.885254"
+}

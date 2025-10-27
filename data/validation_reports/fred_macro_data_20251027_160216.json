@@ -1,0 +1,11 @@
+{
+  "is_valid": true,
+  "data_asset": "fred_macro_data",
+  "suite_name": "fred_macro_suite",
+  "total_expectations": 10,
+  "successful": 10,
+  "failed": 0,
+  "success_rate": 100.0,
+  "failed_expectations": [],
+  "timestamp": "2025-10-27T16:02:16.491609"
+}
