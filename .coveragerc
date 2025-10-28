@@ -1,0 +1,11 @@
+[run]
+source = .
+
+[report]
+omit = 
+    */tests/*
+    */fenv/*
+    */__pycache__/*
+
+[html]
+directory = htmlcov
