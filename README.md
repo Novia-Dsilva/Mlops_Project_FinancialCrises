@@ -74,7 +74,7 @@ DVC Versioning → Testing → Ready for Modeling
 
 ## 📁 Project Structure
 
-
+```text
 Mlops_Project_FinancialCrises/
 │
 ├── README.md                           # This file
@@ -168,7 +168,7 @@ Mlops_Project_FinancialCrises/
     ├── step3c_post_merge_cleaning.py
     ├── step4_bias_detection.py
     └── step6_drift_detection.py
-
+```
 
 ---
 
