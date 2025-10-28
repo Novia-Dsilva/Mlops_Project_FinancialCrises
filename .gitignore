@@ -61,3 +61,4 @@ data/drift_reports/*.json
 
 *.csv
 *.json
+.pytest_cache/

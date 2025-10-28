@@ -165,9 +165,10 @@ Mlops_Project_FinancialCrises/
     ├── step1_data_cleaning.py
     ├── step2_feature_engineering.py
     ├── step3_data_merging.py
-    ├── step3c_post_merge_cleaning.py
-    ├── step4_bias_detection.py
-    └── step6_drift_detection.py
+    ├── step4_post_merge_cleaning.py
+    ├── step5_bias_detection_with_explicit_slicing.py
+    └── step6_anomaly_detection
+    └── step7_drift_detection.py
 ```
 
 ---
