@@ -1,0 +1,98 @@
+# DVC Pipeline Configuration
+# Tracks data dependencies and outputs
+
+stages:
+  data_collection:
+    cmd: python step0_data_collection.py
+    deps:
+      - step0_data_collection.py
+    outs:
+      - data/raw/fred_raw.csv
+      - data/raw/market_raw.csv
+      - data/raw/company_prices_raw.csv
+      - data/raw/company_balance_raw.csv
+      - data/raw/company_income_raw.csv
+    metrics:
+      - data/reports/data_collection_metrics.json:
+          cache: false
+
+  data_cleaning:
+    cmd: python step1_data_cleaning.py
+    deps:
+      - step1_data_cleaning.py
+      - data/raw
+    outs:
+      - data/clean/fred_clean.csv
+      - data/clean/market_clean.csv
+      - data/clean/company_prices_clean.csv
+      - data/clean/company_balance_clean.csv
+      - data/clean/company_income_clean.csv
+    metrics:
+      - data/reports/step1_cleaning_report.csv:
+          cache: false
+
+  feature_engineering:
+    cmd: python step2_feature_engineering.py
+    deps:
+      - step2_feature_engineering.py
+      - data/clean
+    outs:
+      - data/features/fred_features.csv
+      - data/features/market_features.csv
+      - data/features/company_features.csv
+
+  data_merging:
+    cmd: python step3_data_merging.py
+    deps:
+      - step3_data_merging.py
+      - data/features/fred_features.csv
+      - data/features/market_features.csv
+      - data/features/company_features.csv
+    outs:
+      - data/features/macro_features.csv
+      - data/features/merged_features.csv
+    metrics:
+      - data/reports/step3_merge_report.csv:
+          cache: false
+
+  clean_merged:
+    cmd: python step3c_post_merge_cleaning.py
+    deps:
+      - step3c_post_merge_cleaning.py
+      - data/features/macro_features.csv
+      - data/features/merged_features.csv
+    outs:
+      - data/features/macro_features_clean.csv
+      - data/features/merged_features_clean.csv
+    metrics:
+      - data/reports/step3c_post_merge_cleaning_report.csv:
+          cache: false
+
+  anomaly_detection:
+    cmd: python src/validation/step5_anomaly_detection.py
+    deps:
+      - src/validation/step5_anomaly_detection.py
+      - data/features/merged_features_clean.csv
+    outs:
+      - data/features/merged_features_clean_with_anomaly_flags.csv
+    metrics:
+      - data/anomaly_reports/anomaly_report_*.json:
+          cache: false
+
+  bias_detection:
+    cmd: python step4_bias_detection.py
+    deps:
+      - step4_bias_detection.py
+      - data/features/merged_features_clean.csv
+    metrics:
+      - data/bias_reports/bias_report_*.json:
+          cache: false
+
+  drift_detection:
+    cmd: python step6_drift_detection.py
+    deps:
+      - step6_drift_detection.py
+      - data/features/merged_features_clean.csv
+    metrics:
+      - data/drift_reports/drift_report_*.json:
+          cache: false

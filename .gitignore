@@ -1,3 +1,63 @@
 fenv/
 gx/
 notebooks/.ipynb_checkpoints
+
+# Environment files
+.env
+*.env
+!.env.example
+
+# API Keys
+api_keys.txt
+secrets/
+
+# Airflow
+logs/
+airflow.db
+airflow.cfg
+standalone_admin_password.txt
+
+# DVC
+.dvc/cache/
+.dvc/tmp/
+
+# Data (tracked by DVC, not Git)
+data/raw/*.csv
+data/clean/*.csv
+data/features/*.csv
+data/processed/*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+fenv/
+env/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Reports (can be large)
+data/validation_reports/*.json
+data/anomaly_reports/*.json
+data/bias_reports/*.json
+data/drift_reports/*.json
+
+# Keep directories but not contents
+!data/raw/.gitkeep
+!data/clean/.gitkeep
+!data/features/.gitkeep
+
+*.csv
+*.json

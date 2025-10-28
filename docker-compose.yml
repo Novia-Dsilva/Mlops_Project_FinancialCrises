@@ -1,0 +1,265 @@
+# # Docker Compose for Airflow
+# version: '3.8'
+
+# x-airflow-common:
+#   &airflow-common
+#   image: apache/airflow:2.7.1-python3.9
+#   environment:
+#     &airflow-common-env
+#     AIRFLOW__CORE__EXECUTOR: LocalExecutor
+#     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+#     AIRFLOW__CORE__FERNET_KEY: ''
+#     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+#     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+#     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
+#   volumes:
+#     - ./dags:/opt/airflow/dags
+#     - ./logs:/opt/airflow/logs
+#     - ./data:/opt/airflow/data
+#     - ./src:/opt/airflow/src
+#     - ./step0_data_collection.py:/opt/airflow/step0_data_collection.py
+#     - ./step1_data_cleaning.py:/opt/airflow/step1_data_cleaning.py
+#     - ./step2_feature_engineering.py:/opt/airflow/step2_feature_engineering.py
+#     - ./step3_data_merging.py:/opt/airflow/step3_data_merging.py
+#     - ./step3c_post_merge_cleaning.py:/opt/airflow/step3c_post_merge_cleaning.py
+#     - ./step4_bias_detection.py:/opt/airflow/step4_bias_detection.py
+#     - ./step6_drift_detection.py:/opt/airflow/step6_drift_detection.py
+#     - ./params.yaml:/opt/airflow/params.yaml
+#   user: "${AIRFLOW_UID:-50000}:0"
+#   depends_on:
+#     &airflow-common-depends-on
+#     postgres:
+#       condition: service_healthy
+
+# services:
+#   postgres:
+#     image: postgres:13
+#     environment:
+#       POSTGRES_USER: airflow
+#       POSTGRES_PASSWORD: airflow
+#       POSTGRES_DB: airflow
+#     volumes:
+#       - postgres-db-volume:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD", "pg_isready", "-U", "airflow"]
+#       interval: 5s
+#       retries: 5
+#     restart: always
+
+#   airflow-webserver:
+#     <<: *airflow-common
+#     command: webserver
+#     ports:
+#       - 8080:8080
+#     healthcheck:
+#       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+#       interval: 10s
+#       timeout: 10s
+#       retries: 5
+#     restart: always
+#     depends_on:
+#       <<: *airflow-common-depends-on
+#       airflow-init:
+#         condition: service_completed_successfully
+
+#   airflow-scheduler:
+#     <<: *airflow-common
+#     command: scheduler
+#     healthcheck:
+#       test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+#       interval: 10s
+#       timeout: 10s
+#       retries: 5
+#     restart: always
+#     depends_on:
+#       <<: *airflow-common-depends-on
+#       airflow-init:
+#         condition: service_completed_successfully
+
+#   airflow-init:
+#     <<: *airflow-common
+#     entrypoint: /bin/bash
+#     command:
+#       - -c
+#       - |
+#         mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/data
+#         airflow db init
+#         airflow users create \
+#           --username admin \
+#           --firstname Admin \
+#           --lastname User \
+#           --role Admin \
+#           --email admin@example.com \
+#           --password admin123
+#     environment:
+#       <<: *airflow-common-env
+#     user: "0:0"
+
+# volumes:
+#   postgres-db-volume:
+
+# Step 1: Replace image with build in x-airflow-common
+# version: '3.8'
+
+# x-airflow-common:
+#   &airflow-common
+#   build: .  # Changed from image to build
+#   environment:
+#     &airflow-common-env
+#     AIRFLOW__CORE__EXECUTOR: LocalExecutor
+#     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+#     AIRFLOW__CORE__FERNET_KEY: ''
+#     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
+#     AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+#     AIRFLOW__API__AUTH_BACKENDS: 'airflow.api.auth.backend.basic_auth'
+#     AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+#   volumes:
+#     - ./dags:/opt/airflow/dags
+#     - ./logs:/opt/airflow/logs
+#     - ./data:/opt/airflow/data
+#     - ./src:/opt/airflow/src
+#     - .:/opt/airflow/project
+#   ports:
+#     - "8080:8080"
+#   user: "${AIRFLOW_UID:-50000}:0"
+#   depends_on:
+#     &airflow-common-depends-on
+#     postgres:
+#       condition: service_healthy
+
+# services:
+#   postgres:
+#     image: postgres:13
+#     environment:
+#       POSTGRES_USER: airflow
+#       POSTGRES_PASSWORD: airflow
+#       POSTGRES_DB: airflow
+#     volumes:
+#       - postgres-db-volume:/var/lib/postgresql/data
+#     healthcheck:
+#       test: ["CMD", "pg_isready", "-U", "airflow"]
+#       interval: 5s
+#       retries: 5
+#     restart: always
+
+#   airflow-webserver:
+#     <<: *airflow-common
+#     command: webserver
+#     ports:
+#       - 8080:8080
+#     healthcheck:
+#       test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+#       interval: 10s
+#       timeout: 10s
+#       retries: 5
+#     restart: always
+#     depends_on:
+#       <<: *airflow-common-depends-on
+#       airflow-init:
+#         condition: service_completed_successfully
+
+#   airflow-scheduler:
+#     <<: *airflow-common
+#     command: scheduler
+#     healthcheck:
+#       test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob --hostname "$${HOSTNAME}"']
+#       interval: 10s
+#       timeout: 10s
+#       retries: 5
+#     restart: always
+#     depends_on:
+#       <<: *airflow-common-depends-on
+#       airflow-init:
+#         condition: service_completed_successfully
+
+#   airflow-init:
+#     <<: *airflow-common
+#     entrypoint: /bin/bash
+#     command:
+#       - -c
+#       - |
+#         mkdir -p /opt/airflow/logs /opt/airflow/dags /opt/airflow/data
+#         airflow db init
+#         airflow users create \
+#           --username admin \
+#           --firstname Admin \
+#           --lastname User \
+#           --role Admin \
+#           --email admin@example.com \
+#           --password admin123
+#     environment:
+#       <<: *airflow-common-env
+#     user: "0:0"
+
+# volumes:
+#   postgres-db-volume:
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+    restart: always
+
+  airflow-webserver:
+    build: .
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'false'
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./data:/opt/airflow/data
+      - ./src:/opt/airflow/src
+      - .:/opt/airflow/project
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "airflow db migrate &&
+               airflow users create --username admin --password admin123 --firstname Admin --lastname User --role Admin --email admin@example.com || true &&
+               airflow webserver"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      - postgres
+
+  airflow-scheduler:
+    build: .
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+      AIRFLOW__CORE__FERNET_KEY: ''
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./data:/opt/airflow/data
+      - ./src:/opt/airflow/src
+      - .:/opt/airflow/project
+    command: scheduler
+    healthcheck:
+      test: ["CMD-SHELL", 'airflow jobs check --job-type SchedulerJob']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: always
+    depends_on:
+      - postgres
+
+volumes:
+  postgres-db-volume:
