@@ -8,7 +8,7 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 •⁠  ⁠[Overview](#overview)
 •⁠  ⁠[Architecture](#architecture)
@@ -25,7 +25,7 @@
 
 ---
 
-## 🎯 Overview
+## Overview
 
 This MLOps pipeline implements a comprehensive data processing workflow for financial stress testing with:
 
@@ -47,7 +47,7 @@ This MLOps pipeline implements a comprehensive data processing workflow for fina
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ### *Pipeline Flow:*
 
@@ -72,7 +72,7 @@ DVC Versioning → Testing → Ready for Modeling
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```text
 Mlops_Project_FinancialCrises/
@@ -173,7 +173,7 @@ Mlops_Project_FinancialCrises/
 
 ---
 
-## ✅ Prerequisites
+## Prerequisites
 
 ### *Required Software:*
 •⁠  ⁠Python 3.9+
@@ -189,12 +189,12 @@ Mlops_Project_FinancialCrises/
 
 ---
 
-## 🚀 Installation
+## Installation
 
 ### *Step 1: Clone Repository*
 
 ⁠ bash
-git clone https://github.com/yourusername/Mlops_Project_FinancialCrises.git
+git clone https://github.com/Novia-Dsilva/Mlops_Project_FinancialCrises.git
 cd Mlops_Project_FinancialCrises
  ⁠
 
@@ -252,7 +252,7 @@ great-expectations init
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 ### *Create .env File*
 
@@ -269,9 +269,9 @@ nano .env  # or use your favorite editor
 ### *Minimal .env Configuration:*
 
 ⁠ bash
-# ============================================================================
+### ===============================================================
 # REQUIRED CONFIGURATION
-# ============================================================================
+### ===============================================================
 
 # Airflow
 AIRFLOW_UID=50000
@@ -290,9 +290,9 @@ START_DATE=2005-01-01
 END_DATE=today
 REPORTING_LAG_DAYS=45
 
-# ============================================================================
+### ===================================================================
 # OPTIONAL CONFIGURATION
-# ============================================================================
+### ===================================================================
 
 # Alerts (can disable)
 SLACK_ALERTS_ENABLED=false
@@ -316,7 +316,7 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 
 ---
 
-## 🎮 Pipeline Execution
+## Pipeline Execution
 
 ### *Option 1: Run Complete Pipeline (Recommended)*
 
@@ -408,7 +408,7 @@ dvc status
 
 ---
 
-## 🔍 Data Validation
+## Data Validation
 
 ### *Validation Checkpoints:*
 
@@ -457,7 +457,7 @@ great-expectations docs build
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### *Run Tests:*
 
@@ -501,7 +501,7 @@ pytest -n auto
 
 ---
 
-## 📊 Monitoring & Alerts
+## Monitoring & Alerts
 
 ### *Anomaly Detection:*
 
@@ -632,9 +632,9 @@ git push --tags
 
 ---
 
-## 🎯 Key Features
+## Key Features
 
-### *1. Point-in-Time Correctness ✅*
+### *1. Point-in-Time Correctness *
 
 Ensures no look-ahead bias:
 
@@ -648,7 +648,7 @@ Ensures no look-ahead bias:
 
 *Why it matters:* Prevents using future information that wouldn't be available at prediction time.
 
-### *2. Data Quality Assurance ✅*
+### *2. Data Quality Assurance *
 
 *4 Validation Checkpoints:*
 •⁠  ⁠Raw data validation (schema, ranges, completeness)
@@ -662,7 +662,7 @@ Ensures no look-ahead bias:
 •⁠  ⁠No duplicate columns from merge operations
 •⁠  ⁠Valid financial ratios
 
-### *3. Bias Detection & Mitigation ✅*
+### *3. Bias Detection & Mitigation *
 
 *Data Slicing Analysis:*
 •⁠  ⁠25 company slices
@@ -679,7 +679,7 @@ Ensures no look-ahead bias:
 •⁠  ⁠Weighted loss function (weight ∝ 1/company_samples)
 •⁠  ⁠Crisis periods included in validation set
 
-### *4. Anomaly Detection ✅*
+### *4. Anomaly Detection *
 
 *Detection Methods:*
 •⁠  ⁠IQR outliers (statistical)
@@ -695,7 +695,7 @@ Ensures no look-ahead bias:
 •⁠  ⁠Original data unchanged
 •⁠  ⁠Detailed reports with severity levels
 
-### *5. Comprehensive Testing ✅*
+### *5. Comprehensive Testing *
 
 *Test Coverage: 84%*
 
@@ -801,7 +801,7 @@ cat data/validation_reports/ge_*.json | python -m json.tool
 
 ---
 
-## 📚 Documentation
+## Documentation
 
 ### *Additional Resources:*
 
@@ -823,7 +823,7 @@ open docs/src/index.html
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 ### *Development Workflow:*
 
@@ -863,7 +863,7 @@ mypy src/
 
 ---
 
-## 📝 Pipeline Statistics
+## Pipeline Statistics
 
 ### *Data Volume:*
 
@@ -888,30 +888,30 @@ mypy src/
 
 ---
 
-## 🎓 Learning Outcomes
+## Learning Outcomes
 
 This pipeline demonstrates:
 
-✅ *MLOps Best Practices*
+*MLOps Best Practices*
 •⁠  ⁠Data versioning (DVC)
 •⁠  ⁠Pipeline orchestration (Airflow)
 •⁠  ⁠Automated validation (Great Expectations)
 •⁠  ⁠Comprehensive testing (pytest, 84% coverage)
 •⁠  ⁠Monitoring & alerting (Email, Slack)
 
-✅ *Data Engineering*
+*Data Engineering*
 •⁠  ⁠Point-in-time correctness
 •⁠  ⁠Quarterly to daily conversion
 •⁠  ⁠Feature engineering (45+ features per dataset)
 •⁠  ⁠Multi-source data merging
 
-✅ *Data Quality*
+*Data Quality*
 •⁠  ⁠Anomaly detection (flag-only, crisis-aware)
 •⁠  ⁠Bias detection (data slicing across 3 dimensions)
 •⁠  ⁠Drift detection (historical comparison)
 •⁠  ⁠Validation at each stage
 
-✅ *Production Readiness*
+*Production Readiness*
 •⁠  ⁠Error handling & retries
 •⁠  ⁠Detailed logging
 •⁠  ⁠Alert system
@@ -920,7 +920,7 @@ This pipeline demonstrates:
 
 ---
 
-## 📞 Support
+## Support
 
 For questions or issues:
 
@@ -931,13 +931,13 @@ For questions or issues:
 
 ---
 
-## 📄 License
+## License
 
 MIT License - see [LICENSE](LICENSE) file for details
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 •⁠  ⁠*FRED* - Federal Reserve Economic Data
 •⁠  ⁠*Yahoo Finance* - Market & stock price data
@@ -947,7 +947,7 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ---
 
-## 🚀 Quick Start Summary
+## Quick Start Summary
 
 ⁠ bash
 # 1. Clone and setup
@@ -984,7 +984,7 @@ dvc push
 # 6. Run tests
 pytest --cov=src --cov-report=html
 
-# 7. Success! ✅
+# 7. Success! 
 # - Data in: data/features/merged_features_clean.csv
 # - Coverage: 84%
 # - All validations passed
@@ -992,6 +992,5 @@ pytest --cov=src --cov-report=html
 
 ---
 
-*Built with ❤️ for MLOps Course - Financial Crisis Detection Project*
+*Built by Mlops Group11 Team*
 
-*Last Updated:* October 2025
