@@ -30,11 +30,17 @@
 This MLOps pipeline implements a comprehensive data processing workflow for financial stress testing with:
 
 •⁠  ⁠*Point-in-time correctness* - 45-day reporting lag for quarterly financials
+
 •⁠  ⁠*Dual-pipeline architecture* - VAE for scenarios + XGBoost/LSTM for predictions
+
 •⁠  ⁠*Comprehensive validation* - 4 checkpoints with Great Expectations
+
 •⁠  ⁠*Data versioning* - DVC for reproducibility
+
 •⁠  ⁠*Quality assurance* - Anomaly detection, bias detection, drift detection
+
 •⁠  ⁠*Production-ready* - Airflow orchestration, monitoring, alerting
+
 •⁠  ⁠*Test coverage* - 84% (exceeds 75% requirement)
 
 ### *Data Sources:*
@@ -201,13 +207,13 @@ cd Mlops_Project_FinancialCrises
 ### *Step 2: Create Virtual Environment*
 
 ⁠ bash
-# Create virtual environment
+## Create virtual environment
 python3 -m venv fenv
 
-# Activate (Mac/Linux)
+## Activate (Mac/Linux)
 source fenv/bin/activate
 
-# Activate (Windows)
+## Activate (Windows)
 fenv\Scripts\activate
  ⁠
 
@@ -225,28 +231,28 @@ pip install -r requirements-test.txt
 ### *Step 4: Initialize DVC*
 
 ⁠ bash
-# Initialize DVC
+## Initialize DVC
 dvc init
 
-# Add remote storage (choose one):
+## Add remote storage (choose one):
 
-# Option A: Local remote (for testing)
+## Option A: Local remote (for testing)
 dvc remote add -d local_remote /tmp/dvc-storage
 
-# Option B: S3 remote (for production)
+## Option B: S3 remote (for production)
 dvc remote add -d s3remote s3://your-bucket/dvc-storage
 dvc remote modify s3remote access_key_id YOUR_AWS_KEY
 dvc remote modify s3remote secret_access_key YOUR_AWS_SECRET
 
-# Option C: Google Drive (free)
+## Option C: Google Drive (free)
 dvc remote add -d gdrive gdrive://YOUR_FOLDER_ID
  ⁠
 
 ### *Step 5: Setup Great Expectations*
 
 ⁠ bash
-# Initialize Great Expectations (will be done automatically by validation scripts)
-# Or manually:
+## Initialize Great Expectations (will be done automatically by validation scripts)
+## Or manually:
 great-expectations init
  ⁠
 
@@ -259,10 +265,10 @@ great-expectations init
 Copy the template and fill in your values:
 
 ⁠ bash
-# Copy template
+## Copy template
 cp .env.example .env
 
-# Edit with your values
+## Edit with your values
 nano .env  # or use your favorite editor
  ⁠
 
@@ -270,35 +276,35 @@ nano .env  # or use your favorite editor
 
 ⁠ bash
 ### ===============================================================
-# REQUIRED CONFIGURATION
+## REQUIRED CONFIGURATION
 ### ===============================================================
 
-# Airflow
+## Airflow
 AIRFLOW_UID=50000
 AIRFLOW__CORE__FERNET_KEY=YOUR_FERNET_KEY_HERE
 AIRFLOW__WEBSERVER__SECRET_KEY=YOUR_SECRET_KEY_HERE
 
-# API Keys
+## API Keys
 ALPHA_VANTAGE_API_KEY=YOUR_ALPHA_VANTAGE_KEY_HERE
 
-# DVC
+## DVC
 DVC_REMOTE_TYPE=local
 DVC_LOCAL_REMOTE=/tmp/dvc-storage
 
-# Pipeline Parameters
+## Pipeline Parameters
 START_DATE=2005-01-01
 END_DATE=today
 REPORTING_LAG_DAYS=45
 
-### ===================================================================
-# OPTIONAL CONFIGURATION
-### ===================================================================
+### =================================================================
+## OPTIONAL CONFIGURATION
+### =================================================================
 
-# Alerts (can disable)
+## Alerts (can disable)
 SLACK_ALERTS_ENABLED=false
 EMAIL_ALERTS_ENABLED=false
 
-# Thresholds
+## Thresholds
 ANOMALY_IQR_THRESHOLD=3.0
 BIAS_REPRESENTATION_THRESHOLD=0.3
 MAX_MISSING_PCT_CLEAN=5
@@ -307,10 +313,10 @@ MAX_MISSING_PCT_CLEAN=5
 ### *Generate Required Keys:*
 
 ⁠ bash
-# Generate Fernet key for Airflow
+## Generate Fernet key for Airflow
 python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
 
-# Generate secret key for Airflow
+## Generate secret key for Airflow
 python -c "import secrets; print(secrets.token_urlsafe(32))"
  ⁠
 
@@ -321,47 +327,47 @@ python -c "import secrets; print(secrets.token_urlsafe(32))"
 ### *Option 1: Run Complete Pipeline (Recommended)*
 
 ⁠ bash
-# Make run script executable
+## Make run script executable
 chmod +x run_pipeline.sh
 
-# Run complete pipeline
+## Run complete pipeline
 ./run_pipeline.sh
  ⁠
 
 ### *Option 2: Run Individual Steps*
 
 ⁠ bash
-# Step 0: Data Collection (~18 minutes)
+## Step 0: Data Collection (~18 minutes)
 python step0_data_collection.py
 
-# Checkpoint 1: Validate Raw Data
+## Checkpoint 1: Validate Raw Data
 python src/validation/validate_checkpoint_1_raw.py
 
-# Step 1: Data Cleaning
+## Step 1: Data Cleaning
 python step1_data_cleaning.py
 
-# Checkpoint 2: Validate Clean Data
+## Checkpoint 2: Validate Clean Data
 python src/validation/validate_checkpoint_2_clean.py
 
-# Step 2: Feature Engineering
+## Step 2: Feature Engineering
 python step2_feature_engineering.py
 
-# Step 3: Data Merging
+## Step 3: Data Merging
 python step3_data_merging.py
 
-# Checkpoint 3: Validate Merged Data
+## Checkpoint 3: Validate Merged Data
 python src/validation/validate_checkpoint_3_merged.py
 
-# Step 3c: Clean Merged Data
+## Step 3c: Clean Merged Data
 python step3c_post_merge_cleaning.py
 
-# Step 5: Anomaly Detection
+## Step 5: Anomaly Detection
 python src/validation/step5_anomaly_detection.py
 
-# Step 4: Bias Detection
+## Step 4: Bias Detection
 python step4_bias_detection.py
 
-# Step 6: Drift Detection
+## Step 6: Drift Detection
 python step6_drift_detection.py
 
 # DVC: Version all data
@@ -375,37 +381,36 @@ git push
 ### *Option 3: Run with Airflow (Production)*
 
 ⁠ bash
-# Step 1: Start Airflow
+## Step 1: Start Airflow
 docker-compose up -d
 
-# Step 2: Wait for initialization (~2 minutes)
+## Step 2: Wait for initialization (~2 minutes)
 docker-compose logs -f airflow-init
 
-# Step 3: Access Airflow UI
-# Open: http://localhost:8080
-# Username: admin
-# Password: admin
+## Step 3: Access Airflow UI
+### Open: http://localhost:8080
+### Username: admin
+### Password: admin
 
-# Step 4: Trigger DAG from UI or CLI
+## Step 4: Trigger DAG from UI or CLI
 docker-compose exec airflow-webserver airflow dags trigger financial_crisis_detection_pipeline
 
-# Step 5: Monitor progress in UI
-# View logs, task status, and execution graph
+## Step 5: Monitor progress in UI
+## View logs, task status, and execution graph
  ⁠
 
 ### *Option 4: Run with DVC Pipeline*
 
 ⁠ bash
-# Run entire DVC pipeline
+## Run entire DVC pipeline
 dvc repro
 
-# Run specific stage
+## Run specific stage
 dvc repro data_cleaning
 
-# Check pipeline status
+## Check pipeline status
 dvc status
  ⁠
-
 ---
 
 ## Data Validation
@@ -462,14 +467,14 @@ great-expectations docs build
 ### *Run Tests:*
 
 ⁠ bash
-# Run all tests with coverage
+## Run all tests with coverage
 pytest --cov=src --cov=. --cov-report=html --cov-report=term-missing
 
-# Or use Makefile
+## Or use Makefile
 make test          # Run all tests
 make coverage      # Run with coverage report
 
-# Or use helper script
+## Or use helper script
 ./run_tests.sh
  ⁠
 
@@ -478,7 +483,7 @@ make coverage      # Run with coverage report
 Current coverage: *84%* (exceeds 75% requirement)
 
 ⁠ bash
-# View coverage report
+## View coverage report
 open htmlcov/index.html  # Mac
 xdg-open htmlcov/index.html  # Linux
  ⁠
@@ -486,16 +491,16 @@ xdg-open htmlcov/index.html  # Linux
 ### *Run Specific Tests:*
 
 ⁠ bash
-# Test specific module
+## Test specific module
 pytest tests/test_data_cleaning.py -v
 
-# Test specific class
+## Test specific class
 pytest tests/test_drift_detection.py::TestKSTestDriftDetection -v
 
-# Run fast tests only
+## Run fast tests only
 pytest -m "not slow"
 
-# Run in parallel
+## Run in parallel
 pytest -n auto
  ⁠
 
@@ -550,11 +555,11 @@ Alerts are sent when:
 *Enable Alerts in .env:*
 
 ⁠ bash
-# Slack
+## Slack
 SLACK_ALERTS_ENABLED=true
 SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/WEBHOOK/URL
 
-# Email
+## Email
 EMAIL_ALERTS_ENABLED=true
 SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
@@ -562,18 +567,17 @@ SENDER_EMAIL=your-email@gmail.com
 SENDER_APP_PASSWORD=your_16_char_app_password
 RECIPIENT_EMAILS=team@example.com,member@example.com
  ⁠
-
 ---
 
-## 🔄 Reproducibility
+## Reproducibility
 
 ### *Pull Data from DVC:*
 
 ⁠ bash
-# Pull all versioned data
+## Pull all versioned data
 dvc pull
 
-# Pull specific stage
+## Pull specific stage
 dvc pull data/raw.dvc
 dvc pull data/clean.dvc
  ⁠
@@ -581,55 +585,54 @@ dvc pull data/clean.dvc
 ### *Recreate Entire Pipeline:*
 
 ⁠ bash
-# Step 1: Clone repository
+## Step 1: Clone repository
 git clone https://github.com/yourusername/Mlops_Project_FinancialCrises.git
 cd Mlops_Project_FinancialCrises
 
-# Step 2: Setup environment
+## Step 2: Setup environment
 python3 -m venv fenv
 source fenv/bin/activate
 pip install -r requirements.txt
 
-# Step 3: Configure
+## Step 3: Configure
 cp .env.example .env
-# Edit .env with your API keys
+## Edit .env with your API keys
 
-# Step 4: Initialize DVC
+## Step 4: Initialize DVC
 dvc init
 dvc remote add -d local_remote /tmp/dvc-storage
 
-# Step 5: Pull data (if already versioned)
+## Step 5: Pull data (if already versioned)
 dvc pull
 
-# Step 6: Or regenerate from scratch
+## Step 6: Or regenerate from scratch
 python step0_data_collection.py
-# ... run all steps
+### ... run all steps
 
-# Step 7: Run tests
+## Step 7: Run tests
 pytest --cov=src --cov-report=html
 
-# Step 8: Everything should match original results!
+## Step 8: Everything should match original results!
  ⁠
 
 ### *Version Control Workflow:*
 
 ⁠ bash
-# After running pipeline successfully:
+## After running pipeline successfully:
 
-# 1. Version data with DVC
+## 1. Version data with DVC
 dvc add data/raw data/clean data/features
 dvc push
 
-# 2. Commit code and DVC files to Git
+## 2. Commit code and DVC files to Git
 git add .
 git commit -m "Pipeline run: $(date +%Y-%m-%d)"
 git push
 
-# 3. Tag release
+## 3. Tag release
 git tag -a v1.0 -m "Validated pipeline with 84% test coverage"
 git push --tags
  ⁠
-
 ---
 
 ## Key Features
@@ -700,7 +703,7 @@ Ensures no look-ahead bias:
 *Test Coverage: 84%*
 
 ⁠ bash
-# Coverage breakdown:
+## Coverage breakdown:
 src/validation/step5_anomaly_detection.py  86%
 step1_data_cleaning.py                     83%
 step3c_post_merge_cleaning.py              85%
@@ -716,7 +719,7 @@ step4_bias_detection.py                    85%
 
 ---
 
-## 📈 Output Files
+## Output Files
 
 ### *Raw Data (data/raw/):*
 •⁠  ⁠⁠ fred_raw.csv ⁠ - 5,571 rows × 13 columns
@@ -745,45 +748,45 @@ step4_bias_detection.py                    85%
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### *Common Issues:*
 
 *Issue 1: "ModuleNotFoundError: No module named 'src'"*
 
 ⁠ bash
-# Solution: Add to PYTHONPATH
+## Solution: Add to PYTHONPATH
 export PYTHONPATH="${PYTHONPATH}:${PWD}"
 
-# Or install as package
+## Or install as package
 pip install -e .
  ⁠
 
 *Issue 2: "Alpha Vantage API limit reached"*
 
 ⁠ bash
-# Solution: Wait 60 seconds or use multiple keys
-# Add to .env:
+## Solution: Wait 60 seconds or use multiple keys
+## Add to .env:
 ALPHA_VANTAGE_API_KEY_BACKUP=SECOND_KEY_HERE
  ⁠
 
 *Issue 3: "DVC push failed"*
 
 ⁠ bash
-# Check remote configuration
+## Check remote configuration
 dvc remote list
 
-# Verify credentials
+## Verify credentials
 dvc remote modify local_remote --local access_key_id YOUR_KEY
  ⁠
 
 *Issue 4: "pytest: error: unrecognized arguments: --cov"*
 
 ⁠ bash
-# Install pytest-cov
+## Install pytest-cov
 pip install pytest-cov
 
-# Or use alternative
+## Or use alternative
 coverage run -m pytest tests/
 coverage html
  ⁠
@@ -791,11 +794,11 @@ coverage html
 *Issue 5: "Great Expectations validation failed"*
 
 ⁠ bash
-# View detailed report
+## View detailed report
 great-expectations docs build
 # Open: great_expectations/uncommitted/data_docs/local_site/index.html
 
-# Check which expectations failed
+## Check which expectations failed
 cat data/validation_reports/ge_*.json | python -m json.tool
  ⁠
 
@@ -813,14 +816,13 @@ cat data/validation_reports/ge_*.json | python -m json.tool
 ### *Project Documentation:*
 
 ⁠ bash
-# Generate API documentation
+## Generate API documentation
 pip install pdoc3
 pdoc --html --output-dir docs src/
 
-# View docs
+## View docs
 open docs/src/index.html
  ⁠
-
 ---
 
 ## Contributing
@@ -828,36 +830,36 @@ open docs/src/index.html
 ### *Development Workflow:*
 
 ⁠ bash
-# 1. Create feature branch
+## 1. Create feature branch
 git checkout -b feature/your-feature
 
-# 2. Make changes
-# Edit code...
+## 2. Make changes
+## Edit code...
 
-# 3. Run tests
+## 3. Run tests
 pytest
 
-# 4. Run pipeline
+## 4. Run pipeline
 python step1_data_cleaning.py  # etc.
 
-# 5. Commit changes
+## 5. Commit changes
 git add .
 git commit -m "Add: your feature"
 
-# 6. Push and create PR
+## 6. Push and create PR
 git push origin feature/your-feature
  ⁠
 
 ### *Code Quality:*
 
 ⁠ bash
-# Run linting
+## Run linting
 pylint src/ step*.py
 
-# Format code
+## Format code
 black src/ step*.py
 
-# Type checking
+## Type checking
 mypy src/
  ⁠
 
@@ -950,21 +952,21 @@ MIT License - see [LICENSE](LICENSE) file for details
 ## Quick Start Summary
 
 ⁠ bash
-# 1. Clone and setup
+## 1. Clone and setup
 git clone <repo-url>
 cd Mlops_Project_FinancialCrises
 python3 -m venv fenv && source fenv/bin/activate
 pip install -r requirements.txt
 
-# 2. Configure
+## 2. Configure
 cp .env.example .env
-# Add your ALPHA_VANTAGE_API_KEY to .env
+### Add your ALPHA_VANTAGE_API_KEY to .env
 
-# 3. Initialize DVC
+## 3. Initialize DVC
 dvc init
 dvc remote add -d local_remote /tmp/dvc-storage
 
-# 4. Run pipeline
+## 4. Run pipeline
 python step0_data_collection.py  # ~18 min
 python src/validation/validate_checkpoint_1_raw.py
 python step1_data_cleaning.py
@@ -977,18 +979,18 @@ python src/validation/step5_anomaly_detection.py
 python step4_bias_detection.py
 python step6_drift_detection.py
 
-# 5. Version data
+## 5. Version data
 dvc add data/raw data/clean data/features
 dvc push
 
-# 6. Run tests
+## 6. Run tests
 pytest --cov=src --cov-report=html
 
 # 7. Success! 
-# - Data in: data/features/merged_features_clean.csv
-# - Coverage: 84%
-# - All validations passed
- ⁠
+### - Data in: data/features/merged_features_clean.csv
+### - Coverage: 84%
+### - All validations passed
+
 
 ---
 
