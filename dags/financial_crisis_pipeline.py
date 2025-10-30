@@ -72,7 +72,7 @@ with DAG(
     
     detect_anomalies = BashOperator(
         task_id='step6_detect_anomalies',
-        bash_command=f'cd {PROJECT_DIR} && python src/validation/step6_anomaly_detection.py',
+        bash_command=f'cd {PROJECT_DIR} && python src/data/step6_anomaly_detection.py',
         execution_timeout=timedelta(minutes=10)
     )
     
