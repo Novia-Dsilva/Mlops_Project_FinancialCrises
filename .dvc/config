@@ -1,0 +1,4 @@
+[core]
+    remote = gcpstore
+['remote "gcpstore"']
+    url = gs://mlops-financial-stress-data
