@@ -108,6 +108,31 @@ data_collection:
     - IVZ    # Invesco
 
 # ============================================================================
+# DATA PREPARATION (Train/Test Split)
+# ============================================================================
+data_preparation:
+  # Source file
+  source_file: 'labeled_data.csv'
+  source_location: 'data/processed'  # ← Your actual location
+  
+  # Target column (what we're predicting)
+  target_column: 'Financial_Distress'  # ← Update this after checking your data
+  # Common alternatives: At_Risk, Company_At_Risk, Distressed, is_distressed, Target
+  
+  # Columns to exclude from features
+  exclude_columns:
+    - Date
+    - Company
+    - Company_Name
+    - Sector
+    - Ticker
+    - Quarter
+    - Year
+  
+  # Include sector as feature (one-hot encoded)
+  include_sector_as_feature: false
+
+# ============================================================================
 # DATA CLEANING & PREPROCESSING
 # ============================================================================
 data_cleaning:
@@ -181,6 +206,31 @@ drift_detection:
     start: 2020
     end: 2025
   significance_level: 0.05
+
+# ============================================================================
+# DATA PREPARATION (Train/Test Split)
+# ============================================================================
+data_preparation:
+  # Source file
+  source_file: 'merged_features_clean_with_anomaly_flags_with_drift_flags.csv'
+  source_location: 'data/processed'  # or 'data/features'
+  
+  # Target column (what we're predicting)
+  target_column: 'Financial_Distress'  # Adjust to your actual column name
+  # Common alternatives: At_Risk, Company_At_Risk, Distressed, is_distressed
+  
+  # Columns to exclude from features
+  exclude_columns:
+    - Date
+    - Company
+    - Company_Name
+    - Sector
+    - Ticker
+    - Quarter
+    - Year
+  
+  # Include sector as feature (one-hot encoded)
+  include_sector_as_feature: false
 
 # ============================================================================
 # MODEL TRAINING
