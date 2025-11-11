@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # # Docker Compose for Airflow
 # version: '3.8'
 
@@ -263,6 +264,9 @@
 
 # volumes:
 #   postgres-db-volume:
+=======
+
+>>>>>>> origin/main
 
 services:
   postgres:
@@ -299,6 +303,11 @@ services:
       - .:/opt/airflow/project
     ports:
       - "8080:8080"
+    #### added for faster execution #####
+    cpus: 2
+    mem_limit: 3g
+
+    ########
     command: >
       bash -c "airflow db migrate &&
                airflow users create --username admin --password admin123 --firstname Admin --lastname User --role Admin --email admin@example.com || true &&

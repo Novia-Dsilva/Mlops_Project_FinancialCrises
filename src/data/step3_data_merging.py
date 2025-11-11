@@ -5,6 +5,7 @@ Combine feature-engineered datasets into two final merged datasets:
 
 Pipeline 1 (VAE - Scenario Generation):
     macro_features.csv = FRED + Market
+    
     - Daily macro/market data only
     - Used to train VAE for generating stress scenarios
     - ~5,500 rows × ~65 columns
@@ -56,6 +57,49 @@ class DataMerger:
 
     # ========== LOAD FEATURE-ENGINEERED DATA ==========
 
+    # def load_feature_datasets(self) -> Dict[str, pd.DataFrame]:
+    #     """Load all feature-engineered datasets from Step 2."""
+    #     logger.info("="*80)
+    #     logger.info("LOADING FEATURE-ENGINEERED DATASETS")
+    #     logger.info("="*80)
+
+    #     data = {}
+
+    #     # Load FRED features
+    #     fred_path = self.features_dir / 'fred_features.csv'
+    #     if fred_path.exists():
+    #         data['fred'] = pd.read_csv(fred_path, parse_dates=['Date'])
+    #         logger.info(f"\n✓ Loaded fred_features: {data['fred'].shape}")
+    #         logger.info(f"  Date range: {data['fred']['Date'].min().date()} to {data['fred']['Date'].max().date()}")
+    #         logger.info(f"  Columns: {list(data['fred'].columns[:10])}...")
+    #     else:
+    #         logger.error(f"\n❌ fred_features.csv not found!")
+    #         raise FileNotFoundError(f"{fred_path} does not exist. Run Step 2 first.")
+
+    #     # Load Market features
+    #     market_path = self.features_dir / 'market_features.csv'
+    #     if market_path.exists():
+    #         data['market'] = pd.read_csv(market_path, parse_dates=['Date'])
+    #         logger.info(f"\n✓ Loaded market_features: {data['market'].shape}")
+    #         logger.info(f"  Date range: {data['market']['Date'].min().date()} to {data['market']['Date'].max().date()}")
+    #         logger.info(f"  Columns: {list(data['market'].columns[:10])}...")
+    #     else:
+    #         logger.error(f"\n❌ market_features.csv not found!")
+    #         raise FileNotFoundError(f"{market_path} does not exist. Run Step 2 first.")
+
+    #     # Load Company features
+    #     company_path = self.features_dir / 'company_features.csv'
+    #     if company_path.exists():
+    #         data['company'] = pd.read_csv(company_path, parse_dates=['Date'])
+    #         logger.info(f"\n✓ Loaded company_features: {data['company'].shape}")
+    #         logger.info(f"  Date range: {data['company']['Date'].min().date()} to {data['company']['Date'].max().date()}")
+    #         logger.info(f"  Companies: {data['company']['Company'].nunique()}")
+    #         logger.info(f"    {sorted(data['company']['Company'].unique())}")
+    #     else:
+    #         logger.error(f"\n❌ company_features.csv not found!")
+    #         raise FileNotFoundError(f"{company_path} does not exist. Run Step 2 first.")
+
+    #     return data
     def load_feature_datasets(self) -> Dict[str, pd.DataFrame]:
         """Load all feature-engineered datasets from Step 2."""
         logger.info("="*80)
@@ -64,10 +108,12 @@ class DataMerger:
 
         data = {}
 
-        # Load FRED features
+        # --- FRED FEATURES ---
         fred_path = self.features_dir / 'fred_features.csv'
         if fred_path.exists():
             data['fred'] = pd.read_csv(fred_path, parse_dates=['Date'])
+            # ✅ Defensive datetime enforcement
+            data['fred']['Date'] = pd.to_datetime(data['fred']['Date'], errors='coerce')
             logger.info(f"\n✓ Loaded fred_features: {data['fred'].shape}")
             logger.info(f"  Date range: {data['fred']['Date'].min().date()} to {data['fred']['Date'].max().date()}")
             logger.info(f"  Columns: {list(data['fred'].columns[:10])}...")
@@ -75,10 +121,12 @@ class DataMerger:
             logger.error(f"\n❌ fred_features.csv not found!")
             raise FileNotFoundError(f"{fred_path} does not exist. Run Step 2 first.")
 
-        # Load Market features
+        # --- MARKET FEATURES ---
         market_path = self.features_dir / 'market_features.csv'
         if market_path.exists():
             data['market'] = pd.read_csv(market_path, parse_dates=['Date'])
+            # ✅ Defensive datetime enforcement
+            data['market']['Date'] = pd.to_datetime(data['market']['Date'], errors='coerce')
             logger.info(f"\n✓ Loaded market_features: {data['market'].shape}")
             logger.info(f"  Date range: {data['market']['Date'].min().date()} to {data['market']['Date'].max().date()}")
             logger.info(f"  Columns: {list(data['market'].columns[:10])}...")
@@ -86,10 +134,12 @@ class DataMerger:
             logger.error(f"\n❌ market_features.csv not found!")
             raise FileNotFoundError(f"{market_path} does not exist. Run Step 2 first.")
 
-        # Load Company features
+        # --- COMPANY FEATURES ---
         company_path = self.features_dir / 'company_features.csv'
         if company_path.exists():
             data['company'] = pd.read_csv(company_path, parse_dates=['Date'])
+            # ✅ Defensive datetime enforcement
+            data['company']['Date'] = pd.to_datetime(data['company']['Date'], errors='coerce')
             logger.info(f"\n✓ Loaded company_features: {data['company'].shape}")
             logger.info(f"  Date range: {data['company']['Date'].min().date()} to {data['company']['Date'].max().date()}")
             logger.info(f"  Companies: {data['company']['Company'].nunique()}")

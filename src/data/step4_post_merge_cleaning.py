@@ -71,7 +71,8 @@ class PostMergeDataCleaner:
         # Date range
         if 'Date' in df.columns:
             if not pd.api.types.is_datetime64_any_dtype(df['Date']):
-                df['Date'] = pd.to_datetime(df['Date'])
+                df['Date'] = pd.to_datetime(df['Date'], format='mixed', errors='coerce')
+
             
             stats['date_min'] = str(df['Date'].min())
             stats['date_max'] = str(df['Date'].max())
@@ -427,7 +428,8 @@ class PostMergeDataCleaner:
         
         # === DATE COLUMNS ===
         if 'Date' in df.columns and not pd.api.types.is_datetime64_any_dtype(df['Date']):
-            df['Date'] = pd.to_datetime(df['Date'])
+            #df['Date'] = pd.to_datetime(df['Date'])
+            df['Date'] = pd.to_datetime(df['Date'], format='mixed', errors='coerce')
             conversions.append("Date → datetime64")
         
         # === CATEGORICAL COLUMNS ===
@@ -466,6 +468,56 @@ class PostMergeDataCleaner:
             logger.info(f"   ✓ All data types correct")
         
         return df
+
+    # def remove_constant_columns(self, df: pd.DataFrame) -> pd.DataFrame:
+    #     """
+    #     Remove columns with constant values (no variance).
+        
+    #     These provide no information for modeling.
+    #     """
+    #     logger.info("\n6. Removing constant/low-variance columns...")
+        
+    #     df = df.copy()
+    #     original_cols = len(df.columns)
+        
+    #     # === IDENTIFY CONSTANT COLUMNS ===
+    #     constant_cols = []
+    #     low_variance_cols = []
+        
+    #     for col in df.columns:
+    #         if col not in ['Date', 'Company', 'Sector']:  # Keep these
+    #             unique_count = df[col].nunique()
+                
+    #             if unique_count <= 1:
+    #                 constant_cols.append(col)
+    #             elif unique_count == 2 and pd.api.types.is_numeric_dtype(df[col]):
+    #                 # Check if it's essentially constant (e.g., 0 and 0.0000001)
+    #                 if df[col].std() < 1e-10:
+    #                     low_variance_cols.append(col)
+        
+    #     # Drop constant columns
+    #     if constant_cols:
+    #         df.drop(columns=constant_cols, inplace=True)
+    #         logger.info(f"   ✓ Removed {len(constant_cols)} constant columns:")
+    #         for col in constant_cols[:5]:
+    #             logger.info(f"      - {col}")
+    #         if len(constant_cols) > 5:
+    #             logger.info(f"      ... and {len(constant_cols) - 5} more")
+    #     else:
+    #         logger.info(f"   ✓ No constant columns found")
+        
+    #     # Drop low variance columns
+    #     if low_variance_cols:
+    #         df.drop(columns=low_variance_cols, inplace=True)
+    #         logger.info(f"   ✓ Removed {len(low_variance_cols)} low-variance columns:")
+    #         for col in low_variance_cols[:5]:
+    #             logger.info(f"      - {col}")
+        
+    #     final_cols = len(df.columns)
+    #     if original_cols > final_cols:
+    #         logger.info(f"   Columns: {original_cols} → {final_cols} (removed {original_cols - final_cols})")
+        
+    #     return df
 
     def remove_constant_columns(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -732,7 +784,7 @@ class PostMergeDataCleaner:
     def run_post_merge_cleaning(self):
         """Execute complete post-merge cleaning pipeline."""
         logger.info("\n" + "="*80)
-        logger.info("STEP 3c: POST-MERGE DATA CLEANING")
+        logger.info("STEP 4: POST-MERGE DATA CLEANING")
         logger.info("="*80)
         logger.info("\nCleaning merged datasets from Step 3...")
         logger.info("\nWhy needed:")
@@ -835,7 +887,6 @@ class PostMergeDataCleaner:
         logger.info("\n✅ Step 3c Complete!")
         logger.info("\n➡️  Next Steps:")
         logger.info("   1. (Optional) Validate: python src/validation/validate_checkpoint_4_clean_merged.py")
-        logger.info("   2. Create interaction features: python step3b_interaction_features.py")
 
         return all_stats
 
@@ -850,7 +901,7 @@ def main():
         
         if stats:
             logger.info("\n" + "="*80)
-            logger.info("✅ STEP 3c SUCCESSFULLY COMPLETED")
+            logger.info("✅ STEP 4 SUCCESSFULLY COMPLETED")
             logger.info("="*80)
             return stats
         else:

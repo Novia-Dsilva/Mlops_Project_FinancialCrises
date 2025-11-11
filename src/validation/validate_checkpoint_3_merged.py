@@ -58,11 +58,16 @@ class CleanMergedDataValidator:
         filepath = self.features_dir / "macro_features_clean.csv"
         if not filepath.exists():
             logger.error(f"❌ File not found: {filepath}")
-            logger.error("   Run Step 3c first: python step3c_post_merge_cleaning.py")
+            logger.error("   Run Step 4 first: python step4_post_merge_cleaning.py")
             return False
         
         df = pd.read_csv(filepath, parse_dates=['Date'])
         
+        # CRITICAL FIX: Ensure Date is datetime
+        if 'Date' in df.columns:
+            if not pd.api.types.is_datetime64_any_dtype(df['Date']):
+                df['Date'] = pd.to_datetime(df['Date'], format='mixed', errors='coerce')
+
         logger.info(f"   Loaded: {df.shape}")
         logger.info(f"   Date range: {df['Date'].min().date()} to {df['Date'].max().date()}")
         
@@ -286,7 +291,10 @@ class CleanMergedDataValidator:
             return False
         
         df = pd.read_csv(filepath, parse_dates=['Date'])
-        
+        # CRITICAL FIX: Ensure Date is datetime
+        if 'Date' in df.columns:
+            if not pd.api.types.is_datetime64_any_dtype(df['Date']):
+                df['Date'] = pd.to_datetime(df['Date'], format='mixed', errors='coerce')
         logger.info(f"   Loaded: {df.shape}")
         logger.info(f"   Companies: {df['Company'].nunique()}")
         logger.info(f"   Date range: {df['Date'].min().date()} to {df['Date'].max().date()}")

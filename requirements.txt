@@ -15,6 +15,7 @@ requests==2.31.0
 
 # Data Validation
 great-expectations==0.17.23
+<<<<<<< HEAD
 
 <<<<<<< HEAD
 # Machine Learning - Traditional
@@ -59,3 +60,6 @@ nbconvert==7.12.0
 # Utilities
 pyyaml>=6.0
 >>>>>>> d6a0a2095b2433aeabc53a28fef077047f8f18fd
+=======
+gcloud
+>>>>>>> origin/main

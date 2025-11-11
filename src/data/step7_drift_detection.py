@@ -299,7 +299,13 @@ def main():
         return
     
     logger.info(f"Loading: {filepath}")
-    df = pd.read_csv(filepath, parse_dates=['Date'])
+    df = pd.read_csv(filepath)
+
+    # CRITICAL FIX: Ensure Date is datetime
+    if 'Date' in df.columns:
+        if not pd.api.types.is_datetime64_any_dtype(df['Date']):
+            df['Date'] = pd.to_datetime(df['Date'], format='mixed', errors='coerce')
+            logger.info(f"   ✓ Converted Date to datetime: {df['Date'].dtype}")
     
     # Run drift detection
     detector = HistoricalDriftDetector(dataset_name=filepath.stem)

@@ -45,9 +45,6 @@ stages:
     outs:
       - data/features/macro_features.csv
       - data/features/merged_features.csv
-    metrics:
-      - data/reports/step3_merge_report.csv:
-          cache: false
 
   step4_postmerge_clean:
     cmd: python src/data/step4_post_merge_cleaning.py
@@ -58,18 +55,12 @@ stages:
     outs:
       - data/features/macro_features_clean.csv
       - data/features/merged_features_clean.csv
-    metrics:
-      - data/reports/step4_postmerge_clean_report.csv:
-          cache: false
 
   step5_bias:
     cmd: python src/data/step5_bias_detection_with_explicit_slicing.py
     deps:
       - src/data/step5_bias_detection_with_explicit_slicing.py
       - data/features/merged_features_clean.csv
-    metrics:
-      - data/bias_reports/bias_report_*.json:
-          cache: false
 
   step6_anomaly:
     cmd: python src/data/step6_anomaly_detection.py
@@ -78,15 +69,11 @@ stages:
       - data/features/merged_features_clean.csv
     outs:
       - data/features/merged_features_clean_with_anomaly_flags.csv
-    metrics:
-      - data/anomaly_reports/anomaly_report_*.json:
-          cache: false
 
   step7_drift:
     cmd: python src/data/step7_drift_detection.py
     deps:
       - src/data/step7_drift_detection.py
       - data/features/merged_features_clean.csv
-    metrics:
-      - data/drift_reports/drift_report_*.json:
-          cache: false
+    outs:
+      - data/features/merged_features_clean_with_anomaly_flags_with_drift_flags.csv

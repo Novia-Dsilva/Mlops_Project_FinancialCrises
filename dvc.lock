@@ -1,0 +1,180 @@
+schema: '2.0'
+stages:
+  step0_collect:
+    cmd: python src/data/step0_data_collection.py
+    deps:
+    - path: src/data/step0_data_collection.py
+      hash: md5
+      md5: e3010285ac27b0ec48695318d60feba0
+      size: 20793
+    outs:
+    - path: data/raw
+      hash: md5
+      md5: 2db87075c9d294dc695ab911b7c14ac6.dir
+      size: 19129395
+      nfiles: 6
+  step1_clean:
+    cmd: python src/data/step1_data_cleaning.py
+    deps:
+    - path: data/raw
+      hash: md5
+      md5: 2db87075c9d294dc695ab911b7c14ac6.dir
+      size: 19129395
+      nfiles: 6
+    - path: src/data/step1_data_cleaning.py
+      hash: md5
+      md5: f6afaaf8733dfa98b612d488fef1b660
+      size: 35326
+    outs:
+    - path: data/clean/company_balance_clean.csv
+      hash: md5
+      md5: 71b7f2282c91af63249f6390f047959c
+      size: 385660
+    - path: data/clean/company_income_clean.csv
+      hash: md5
+      md5: 7fd03644012410c73373bc4a5ad45396
+      size: 199687
+    - path: data/clean/company_prices_clean.csv
+      hash: md5
+      md5: c401a3dcb034968e250aede01478d721
+      size: 10912060
+    - path: data/clean/fred_clean.csv
+      hash: md5
+      md5: 44ce7de67d694449ba8228838428d7a4
+      size: 501416
+    - path: data/clean/market_clean.csv
+      hash: md5
+      md5: 0017cfd4e820aa2f662b5d8d91e6600d
+      size: 241871
+    - path: data/reports/step1_cleaning_report.csv
+      hash: md5
+      md5: 9fad5caa54c11ee98a184dfd7f4edecf
+      size: 313
+  step2_features:
+    cmd: python src/data/step2_feature_engineering.py
+    deps:
+    - path: data/clean
+      hash: md5
+      md5: 695032b26d5b5e9e3eb1d527373302d6.dir
+      size: 12240694
+      nfiles: 5
+    - path: src/data/step2_feature_engineering.py
+      hash: md5
+      md5: e41d457578bc5299dab405b8dbd04733
+      size: 30575
+    outs:
+    - path: data/features/company_features.csv
+      hash: md5
+      md5: 67ef14980e69ea4f6d14be620f28d13f
+      size: 170657133
+    - path: data/features/fred_features.csv
+      hash: md5
+      md5: 64923f8b7f90feab3124ed70195a22cf
+      size: 2427916
+    - path: data/features/market_features.csv
+      hash: md5
+      md5: d8aa292b3b8f5dfd15014c499a7da38a
+      size: 2215663
+  step3_merge:
+    cmd: python src/data/step3_data_merging.py
+    deps:
+    - path: data/features/company_features.csv
+      hash: md5
+      md5: 67ef14980e69ea4f6d14be620f28d13f
+      size: 170657133
+    - path: data/features/fred_features.csv
+      hash: md5
+      md5: 64923f8b7f90feab3124ed70195a22cf
+      size: 2427916
+    - path: data/features/market_features.csv
+      hash: md5
+      md5: d8aa292b3b8f5dfd15014c499a7da38a
+      size: 2215663
+    - path: src/data/step3_data_merging.py
+      hash: md5
+      md5: 015edec09a20a5e0646d8b8ee1fbe583
+      size: 27635
+    outs:
+    - path: data/features/macro_features.csv
+      hash: md5
+      md5: 9de6e8286974b458b5f9a538ca8b92c5
+      size: 4683433
+    - path: data/features/merged_features.csv
+      hash: md5
+      md5: 6bbd294e50318a9aaf279238f4c9b243
+      size: 338276530
+    - path: data/reports/step3_merge_report.csv
+      hash: md5
+      md5: 4ef35a001ec78e6658166b987cdf53ec
+      size: 228
+  step4_postmerge_clean:
+    cmd: python src/data/step4_post_merge_cleaning.py
+    deps:
+    - path: data/features/macro_features.csv
+      hash: md5
+      md5: 9de6e8286974b458b5f9a538ca8b92c5
+      size: 4683433
+    - path: data/features/merged_features.csv
+      hash: md5
+      md5: 6bbd294e50318a9aaf279238f4c9b243
+      size: 338276530
+    - path: src/data/step4_post_merge_cleaning.py
+      hash: md5
+      md5: ee6d6640034106ba3471362ef9c5196f
+      size: 35728
+    outs:
+    - path: data/features/macro_features_clean.csv
+      hash: md5
+      md5: fc6f7ae9161924e0b30410869f204d81
+      size: 4683066
+    - path: data/features/merged_features_clean.csv
+      hash: md5
+      md5: c4988dd855ce8e08fb34fa06558ea27f
+      size: 337393021
+    - path: data/reports/step3c_post_merge_cleaning_report.csv
+      hash: md5
+      md5: cb0f08551ae48ab874db16eb994c1925
+      size: 330
+  step5_bias:
+    cmd: python src/data/step5_bias_detection_with_explicit_slicing.py
+    deps:
+    - path: data/features/merged_features_clean.csv
+      hash: md5
+      md5: c4988dd855ce8e08fb34fa06558ea27f
+      size: 337393021
+    - path: src/data/step5_bias_detection_with_explicit_slicing.py
+      hash: md5
+      md5: 2c7d21764cfc6fe865c815b99257258f
+      size: 22481
+  step6_anomaly:
+    cmd: python src/data/step6_anomaly_detection.py
+    deps:
+    - path: data/features/merged_features_clean.csv
+      hash: md5
+      md5: c4988dd855ce8e08fb34fa06558ea27f
+      size: 337393021
+    - path: src/data/step6_anomaly_detection.py
+      hash: md5
+      md5: 642216ad0534d89996dd5f6798e3cefb
+      size: 23180
+    outs:
+    - path: data/features/merged_features_clean_with_anomaly_flags.csv
+      hash: md5
+      md5: 04f54eccb714731042515b82baf3e95a
+      size: 343425117
+  step7_drift:
+    cmd: python src/data/step7_drift_detection.py
+    deps:
+    - path: data/features/merged_features_clean.csv
+      hash: md5
+      md5: c4988dd855ce8e08fb34fa06558ea27f
+      size: 337393021
+    - path: src/data/step7_drift_detection.py
+      hash: md5
+      md5: db1fc188324fefd4928305a58084fdfc
+      size: 12697
+    outs:
+    - path: data/features/merged_features_clean_with_anomaly_flags_with_drift_flags.csv
+      hash: md5
+      md5: 04f56b33ab1c9d8c3d944071cc965376
+      size: 344745487
