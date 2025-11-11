@@ -1,0 +1,23 @@
+Top 20 Features Selected for Model Training
+======================================================================
+
+ 1. Revenue_Lag90                                      0.220800
+ 2. Close                                              0.215138
+ 3. Total_Liabilities                                  0.191594
+ 4. ROE                                                0.089237
+ 5. Revenue_Growth_YoY                                 0.070652
+ 6. Treasury_10Y_Yield                                 0.036482
+ 7. Profit_Margin_Extreme_Flag                         0.028763
+ 8. Price_to_Book_Proxy                                0.014688
+ 9. SP500_Volatility_90D                               0.014124
+10. Total_Equity                                       0.013445
+11. Oil_Price_Lag22                                    0.009308
+12. Current_Assets                                     0.008322
+13. Revenue_Growth_QoQ                                 0.006608
+14. GDP                                                0.005580
+15. Stock_MA20                                         0.005086
+16. Revenue_Lag252                                     0.004468
+17. Total_Assets                                       0.003869
+18. EBITDA                                             0.002907
+19. ROA                                                0.002877
+20. Yield_Curve_Spread_Lag1                            0.002829

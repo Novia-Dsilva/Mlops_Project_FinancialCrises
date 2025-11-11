@@ -1,0 +1,21 @@
+Top 20 Features Used:
+1. Revenue_Lag90
+2. Close
+3. Total_Liabilities
+4. ROE
+5. Revenue_Growth_YoY
+6. Treasury_10Y_Yield
+7. Profit_Margin_Extreme_Flag
+8. Price_to_Book_Proxy
+9. SP500_Volatility_90D
+10. Total_Equity
+11. Oil_Price_Lag22
+12. Current_Assets
+13. Revenue_Growth_QoQ
+14. GDP
+15. Stock_MA20
+16. Revenue_Lag252
+17. Total_Assets
+18. EBITDA
+19. ROA
+20. Yield_Curve_Spread_Lag1
