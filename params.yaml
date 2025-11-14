@@ -54,138 +54,53 @@
 
 
 
-# params.yaml - MLOps Pipeline Configuration (Data + Training Focus)
+# Pipeline Parameters
 
-# ============================================================================
-# DATA COLLECTION
-# ============================================================================
 data_collection:
   start_date: '2005-01-01'
   end_date: 'today'
-  
-  # FRED Macroeconomic Indicators
   fred_series:
-    - GDPC1           # GDP
-    - CPIAUCSL        # CPI (Inflation)
-    - UNRATE          # Unemployment Rate
-    - FEDFUNDS        # Federal Funds Rate
-    - T10Y3M          # Yield Curve Spread
-    - UMCSENT         # Consumer Confidence
-    - DCOILWTICO      # Oil Price
-    - BOPGSTB         # Trade Balance
-    - BAA10Y          # Corporate Bond Spread
-    - TEDRATE         # TED Spread
-    - DGS10           # Treasury 10Y Yield
-    - STLFSI4         # Financial Stress Index
-    - BAMLH0A0HYM2    # High Yield Spread
-  
-  # Companies to Track (25 total)
+    - GDPC1
+    - CPIAUCSL
+    - UNRATE
+    - FEDFUNDS
   companies:
-    - JPM    # JPMorgan Chase
-    - BAC    # Bank of America
-    - AAPL   # Apple
-    - MSFT   # Microsoft
-    - GS     # Goldman Sachs
-    - MS     # Morgan Stanley
-    - C      # Citigroup
-    - WFC    # Wells Fargo
-    - USB    # U.S. Bancorp
-    - PNC    # PNC Financial
-    - TFC    # Truist Financial
-    - BK     # Bank of New York Mellon
-    - AXP    # American Express
-    - COF    # Capital One
-    - DFS    # Discover Financial
-    - SYF    # Synchrony Financial
-    - V      # Visa
-    - MA     # Mastercard
-    - PYPL   # PayPal
-    - BLK    # BlackRock
-    - SCHW   # Charles Schwab
-    - STT    # State Street
-    - NTRS   # Northern Trust
-    - BEN    # Franklin Resources
-    - IVZ    # Invesco
+    - JPM
+    - BAC
+    - AAPL
+    - MSFT
+    - GS
+    - MS
+    - C
+    - WFC
+    - USB
+    - PNC
+    - TFC
+    - BK
+    - AXP
+    - COF
+    - DFS
+    - SYF
+    - V
+    - MA
+    - PYPL
+    - BLK
+    - SCHW
+    - STT
+    - NTRS
+    - BEN
+    - IVZ
 
-# ============================================================================
-# DATA PREPARATION (Train/Test Split)
-# ============================================================================
-data_preparation:
-  # Source file
-  source_file: 'labeled_data.csv'
-  source_location: 'data/processed'  # ← Your actual location
-  
-  # Target column (what we're predicting)
-  target_column: 'Financial_Distress'  # ← Update this after checking your data
-  # Common alternatives: At_Risk, Company_At_Risk, Distressed, is_distressed, Target
-  
-  # Columns to exclude from features
-  exclude_columns:
-    - Date
-    - Company
-    - Company_Name
-    - Sector
-    - Ticker
-    - Quarter
-    - Year
-  
-  # Include sector as feature (one-hot encoded)
-  include_sector_as_feature: false
-
-# ============================================================================
-# DATA CLEANING & PREPROCESSING
-# ============================================================================
 data_cleaning:
   reporting_lag_days: 45
   forward_fill_only: true
   outlier_threshold_iqr: 3.0
-  
-  # Missing data handling
-  max_missing_pct: 0.3  # Drop features with >30% missing
-  imputation_strategy: 'forward_fill'
-  
-  # Date handling
-  frequency: 'Q'  # Quarterly frequency
-  min_required_quarters: 8  # Minimum quarters of data per company
 
-# ============================================================================
-# FEATURE ENGINEERING
-# ============================================================================
 feature_engineering:
-  # Lag features
-  lag_periods: [1, 2, 4]  # Q-1, Q-2, Q-4 (1 quarter, 6 months, 1 year ago)
-  
-  # Moving averages
-  ma_windows: [4, 8, 12]  # 1 year, 2 years, 3 years in quarters
-  
-  # Volatility features
-  volatility_windows: [4, 8, 12]  # Rolling std windows in quarters
-  
-  # Growth rates
-  growth_periods: [1, 4, 8]  # Quarter-over-quarter, YoY, 2-year growth
-  
-  # Interaction features
-  create_interactions: true
-  interaction_pairs:
-    - ['GDP', 'Unemployment_Rate']
-    - ['Federal_Funds_Rate', 'CPI']
-    - ['Revenue', 'Debt_to_Equity']
-  
-  # Sector-relative features
-  sector_relative_features: true
-  
-  # Financial ratios
-  calculate_ratios: true
-  ratios:
-    - 'debt_to_equity'
-    - 'current_ratio'
-    - 'profit_margin'
-    - 'roe'  # Return on Equity
-    - 'roa'  # Return on Assets
+  lag_periods: [1, 5, 22]
+  ma_windows: [30, 90]
+  volatility_windows: [22, 90]
 
-# ============================================================================
-# DATA VALIDATION
-# ============================================================================
 anomaly_detection:
   iqr_threshold: 3.0
   jump_threshold_pct: 50
@@ -207,249 +122,15 @@ drift_detection:
     end: 2025
   significance_level: 0.05
 
-# ============================================================================
-# DATA PREPARATION (Train/Test Split)
-# ============================================================================
-data_preparation:
-  # Source file
-  source_file: 'merged_features_clean_with_anomaly_flags_with_drift_flags.csv'
-  source_location: 'data/processed'  # or 'data/features'
+# Alert Configuration
+alerts:
+  # Email settings
+  email_recipients:
+    - finance.stress.analyser@gmail.com
   
-  # Target column (what we're predicting)
-  target_column: 'Financial_Distress'  # Adjust to your actual column name
-  # Common alternatives: At_Risk, Company_At_Risk, Distressed, is_distressed
-  
-  # Columns to exclude from features
-  exclude_columns:
-    - Date
-    - Company
-    - Company_Name
-    - Sector
-    - Ticker
-    - Quarter
-    - Year
-  
-  # Include sector as feature (one-hot encoded)
-  include_sector_as_feature: false
-
-# ============================================================================
-# MODEL TRAINING
-# ============================================================================
-train:
-  # Model architecture
-  model_type: 'lstm'
-  
-  # LSTM configuration
-  lstm_units: [128, 64]  # Two LSTM layers
-  dropout_rate: 0.3
-  recurrent_dropout: 0.2
-  dense_units: [32]  # Dense layer after LSTM
-  
-  # Input shape
-  sequence_length: 12  # 12 quarters (3 years of history)
-  
-  # Training hyperparameters
-  epochs: 100
-  batch_size: 32
-  learning_rate: 0.001
-  optimizer: 'adam'
-  
-  # Loss function
-  loss: 'binary_crossentropy'
-  
-  # Data split strategy
-  train_split: 0.7
-  val_split: 0.15
-  test_split: 0.15
-  split_strategy: 'temporal'  # Use time-based split
-  temporal_split_date: '2020-01-01'  # Train: before 2020, Test: after 2020
-  
-  # Class imbalance
-  use_class_weights: true  # Important for imbalanced financial data
-  
-  # Callbacks
-  early_stopping:
-    enabled: true
-    monitor: 'val_loss'
-    patience: 10
-    min_delta: 0.001
-    restore_best_weights: true
-  
-  reduce_lr:
-    enabled: true
-    monitor: 'val_loss'
-    factor: 0.5
-    patience: 5
-    min_lr: 0.000001
-  
-  model_checkpoint:
-    enabled: true
-    filepath: 'models/checkpoints/best_model.h5'
-    monitor: 'val_loss'
-    save_best_only: true
-  
-  # Regularization
-  l2_regularization: 0.01
-  
-  # Reproducibility
-  random_state: 42
-
-# ============================================================================
-# MODEL EVALUATION
-# ============================================================================
-evaluate:
-  # Primary metrics
-  metrics:
-    - accuracy
-    - precision
-    - recall
-    - f1_score
-    - auc_roc
-  
-  # Classification threshold
-  threshold: 0.5
-  
-  # Optimize threshold based on business metric
-  optimize_threshold: true
-  optimization_metric: 'f1_score'
-  
-  # Visualizations to generate
-  plots:
-    - confusion_matrix
-    - roc_curve
-    - precision_recall_curve
-    - training_history
-    - prediction_distribution
-  
-  # Minimum acceptable performance
-  min_performance:
-    accuracy: 0.70
-    precision: 0.65
-    recall: 0.65
-    auc_roc: 0.75
-
-# ============================================================================
-# HYPERPARAMETER TUNING (Optional - Run Separately)
-# ============================================================================
-tune:
-  enabled: false  # Set to true when ready to tune
-  n_trials: 30
-  timeout: 3600  # 1 hour
-  
-  optimization_metric: 'val_auc_roc'
-  direction: 'maximize'
-  
-  # Search space
-  search_space:
-    lstm_units_1:
-      low: 64
-      high: 256
-      step: 64
-    
-    lstm_units_2:
-      low: 32
-      high: 128
-      step: 32
-    
-    dropout_rate:
-      low: 0.1
-      high: 0.5
-    
-    learning_rate:
-      low: 0.0001
-      high: 0.01
-      log: true
-    
-    batch_size:
-      choices: [16, 32, 64]
-
-# ============================================================================
-# MLFLOW EXPERIMENT TRACKING
-# ============================================================================
-mlflow:
-  # Experiment settings
-  experiment_name: 'financial-stress-prediction'
-  tracking_uri: 'mlruns'  # Local tracking directory
-  
-  # Model registry
-  model_name: 'financial-stress-lstm'
-  
-  # Logging
-  log_params: true
-  log_metrics: true
-  log_artifacts: true
-  log_models: true
-  
-  # Tags
-  default_tags:
-    project: 'financial-crisis-mlops'
-    team: 'mlops-team'
-    course: 'DADS-7305'
-
-# ============================================================================
-# DVC CONFIGURATION
-# ============================================================================
-dvc:
-  # Remote storage
-  remote: 'storage'  # Name of DVC remote
-  
-  # Cache settings
-  cache_dir: '.dvc/cache'
-  
-  # Pipeline stages to track
-  track_stages:
-    - collect_data
-    - validate_data
-    - process_data
-    - feature_engineering
-    - train_model
-    - evaluate_model
-
-# ============================================================================
-# LOGGING
-# ============================================================================
-logging:
-  level: 'INFO'  # DEBUG, INFO, WARNING, ERROR
-  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-  
-  # File logging
-  log_to_file: true
-  log_dir: 'logs'
-  log_file: 'training.log'
-  
-  # Console logging
-  log_to_console: true
-
-# ============================================================================
-# PATHS
-# ============================================================================
-paths:
-  # Data directories
-  raw_data: 'data/raw'
-  processed_data: 'data/processed'
-  features: 'data/features'
-  
-  # Model directories
-  models: 'models'
-  checkpoints: 'models/checkpoints'
-  metrics: 'models/metrics'
-  
-  # Logs
-  logs: 'logs'
-  
-  # MLflow
-  mlruns: 'mlruns'
-
-# ============================================================================
-# METADATA
-# ============================================================================
-metadata:
-  project_name: 'Financial Stress Prediction MLOps'
-  version: '1.0.0'
-  created_date: '2025-11-04'
-  team: 'MLOps Team - Northeastern University'
-  course: 'DADS 7305'
-  contact: 'finance.stress.analyser@gmail.com'
+  sender_email: finance.stress.analyser@gmail.com
+  smtp_server: smtp.gmail.com
+  smtp_port: 587
   
   # Gmail App Password (DO NOT commit to git - use environment variable instead)
   # Set via: export GMAIL_APP_PASSWORD='your-16-char-password'
