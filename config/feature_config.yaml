@@ -1,0 +1,34 @@
+all_features:
+  n_features: 142
+  source: data/processed/merged_dataset.csv
+top_features:
+  n_features: 20
+  selection_results: data/processed/feature_selection_results.pkl
+  features:
+  - Revenue_Lag90
+  - Close
+  - Total_Liabilities
+  - ROE
+  - Revenue_Growth_YoY
+  - Treasury_10Y_Yield
+  - Profit_Margin_Extreme_Flag
+  - Price_to_Book_Proxy
+  - Total_Equity
+  - SP500_Volatility_90D
+  - Current_Assets
+  - Oil_Price_Lag22
+  - Revenue_Growth_QoQ
+  - Stock_MA20
+  - Revenue_Lag252
+  - Total_Assets
+  - ROA
+  - ROE_Outlier_Flag
+  - GDP
+  - GDP_Lag22
+targets:
+  names:
+  - Revenue
+  - Debt_to_Equity
+  - Profit_Margin
+  - Stock_Price
+  n_targets: 4
