@@ -59,7 +59,6 @@ data/drift_reports/*.json
 .pytest_cache/models/*.h5
 models/*.pkl
 mlruns/
-<<<<<<< HEAD
 
 # Large data files
 *.npy
@@ -76,5 +75,3 @@ models/**/*.json
 # MLflow
 mlruns/
 mlflow.db
-=======
->>>>>>> d6a0a2095b2433aeabc53a28fef077047f8f18fd
