@@ -318,54 +318,102 @@ def create_targets(input_file: str, output_file: str):
     # ========================================
     # 10. VALIDATION
     # ========================================
-    
+
     print("\n" + "="*80)
     print("🔍 DATA QUALITY CHECKS")
     print("="*80)
-    
-    # Check for companies with no targets (shouldn't happen)
-    companies_no_targets = []
-    for company in df['Company'].unique():
-        company_df = df[df['Company'] == company]
-        if company_df['target_revenue'].notna().sum() == 0:
-            companies_no_targets.append(company)
-    
-    if companies_no_targets:
-        print(f"\n⚠️ Warning: {len(companies_no_targets)} companies have no targets:")
-        print(f"   {companies_no_targets}")
+
+    # SAFETY CHECK: Only validate if target_revenue was actually created
+    if 'target_revenue' in df.columns and df['target_revenue'].notna().sum() > 0:
+        # Check for companies with no targets
+        companies_no_targets = []
+        for company in df['Company'].unique():
+            company_df = df[df['Company'] == company]
+            if company_df['target_revenue'].notna().sum() == 0:
+                companies_no_targets.append(company)
+        
+        if companies_no_targets:
+            print(f"\n⚠️ Warning: {len(companies_no_targets)} companies have no targets:")
+            print(f"   {companies_no_targets[:5]}" + (" ..." if len(companies_no_targets) > 5 else ""))
+        else:
+            print(f"\n✅ All companies have at least some target values")
+        
+        # Check last quarter nulls (expected)
+        last_quarters = df.groupby('Company').tail(1)
+        last_quarter_nulls = last_quarters['target_revenue'].isna().sum()
+        
+        print(f"✅ Last quarter nulls (expected): {last_quarter_nulls}/{len(last_quarters)}")
+        
+        # Show example of predictions we can make
+        print("\n" + "="*80)
+        print("📋 EXAMPLE: WHAT WE CAN PREDICT")
+        print("="*80)
+        
+        # Get a random company with data
+        sample_company = df[df['target_revenue'].notna()]['Company'].iloc[0]
+        sample = df[
+            (df['Company'] == sample_company) & 
+            (df['target_revenue'].notna())
+        ][['Company', 'Date', 'Revenue', 'target_revenue', 'target_eps', 
+        'target_debt_equity', 'target_profit_margin', 'target_stock_return']].head(5)
+        
+        print(f"\nSample predictions for {sample_company}:")
+        print(sample.to_string(index=False))
+
     else:
-        print(f"\n✅ All companies have at least some target values")
-    
-    # Check last quarter nulls (expected)
-    last_quarters = df.groupby('Company').tail(1)
-    last_quarter_nulls = last_quarters['target_revenue'].isna().sum()
-    
-    print(f"\n✅ Last quarter nulls (expected): {last_quarter_nulls}/{len(last_quarters)}")
-    
-    # Show example of predictions we can make
-    print("\n" + "="*80)
-    print("📋 EXAMPLE: WHAT WE CAN PREDICT")
-    print("="*80)
-    
-    # Get a random company with data
-    sample_company = df[df['target_revenue'].notna()]['Company'].iloc[0]
-    sample = df[
-        (df['Company'] == sample_company) & 
-        (df['target_revenue'].notna())
-    ][['Company', 'Date', 'Revenue', 'target_revenue', 'target_eps', 
-       'target_debt_equity', 'target_profit_margin', 'target_stock_return']].head(5)
-    
-    print(f"\nSample predictions for {sample_company}:")
-    print(sample.to_string(index=False))
-    
+        # No revenue target was created
+        print("\n⚠️ target_revenue was NOT created (Revenue column missing)")
+        print("   Skipping revenue-specific validation checks")
+        
+        # Check if ANY targets were created
+        target_cols = ['target_revenue', 'target_eps', 'target_debt_equity', 
+                    'target_profit_margin', 'target_stock_return']
+        
+        created_targets = [col for col in target_cols if col in df.columns and df[col].notna().sum() > 0]
+        
+        if created_targets:
+            print(f"\n✅ Successfully created {len(created_targets)} targets:")
+            for col in created_targets:
+                valid_count = df[col].notna().sum()
+                print(f"   - {col}: {valid_count:,} valid values")
+            
+            # Show example with available targets
+            print("\n" + "="*80)
+            print("📋 EXAMPLE: WHAT WE CAN PREDICT")
+            print("="*80)
+            
+            # Use first available target
+            first_target = created_targets[0]
+            sample_company = df[df[first_target].notna()]['Company'].iloc[0]
+            
+            # Build display columns
+            display_cols = ['Company', 'Date'] + created_targets
+            
+            sample = df[
+                (df['Company'] == sample_company) & 
+                (df[first_target].notna())
+            ][display_cols].head(5)
+            
+            print(f"\nSample predictions for {sample_company}:")
+            print(sample.to_string(index=False))
+        else:
+            print(f"\n❌ CRITICAL: NO targets were created!")
+            print(f"   Your input file is missing ALL required columns.")
+            print(f"\n🔧 ACTION REQUIRED:")
+            print(f"   1. Check your input file: {input_file}")
+            print(f"   2. Verify it contains: Revenue, Net_Income, Stock_Price, etc.")
+            print(f"   3. You may need to run data extraction first")
+            
+            return None
+
     print("\n" + "="*80)
     print("✅ TARGET CREATION COMPLETE!")
     print("="*80)
     print(f"\n🎯 Next steps:")
-    print(f"   1. Run temporal split: python src/preprocessing/create_temporal_splits.py")
+    print(f"   1. Run temporal split: python src/preprocessing/temporal_split.py")
     print(f"   2. Train models on each target")
     print(f"   3. Evaluate and compare")
-    
+
     return df
 
 
