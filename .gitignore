@@ -56,5 +56,27 @@ data/drift_reports/*.json
 
 *.csv
 *.json
+
 .pytest_cache/
 mlruns/
+
+.pytest_cache/models/*.h5
+models/*.pkl
+mlruns/
+
+# Large data files
+*.npy
+data/processed/*.npy
+data/processed/*.csv
+data/features/*.csv
+data/raw/*.csv
+
+# Models
+*.h5
+*.pkl
+models/**/*.json
+
+# MLflow
+mlruns/
+mlflow.db
+

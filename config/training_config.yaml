@@ -1,0 +1,40 @@
+# File: configs/training_config.yaml
+
+# Training parameters
+training:
+  epochs: 50
+  batch_size: 32
+  validation_split: 0.2
+  verbose: 1
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 10
+    monitor: "val_loss"
+    restore_best_weights: true
+
+# MLflow tracking
+mlflow:
+  experiment_name: "financial_stress_test"
+  tracking_uri: "file:./mlruns"  # or http://localhost:5000
+  
+  # What to log
+  log_models: true
+  log_params: true
+  log_metrics: true
+  log_artifacts: true
+
+# Evaluation metrics
+evaluation:
+  metrics:
+    - rmse
+    - mae
+    - r2
+    - mape
+
+# Output paths
+output:
+  models_dir: "models"
+  logs_dir: "logs"
+  plots_dir: "plots"

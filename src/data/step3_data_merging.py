@@ -113,40 +113,50 @@ class DataMerger:
         if fred_path.exists():
             data['fred'] = pd.read_csv(fred_path, parse_dates=['Date'])
             # ✅ Defensive datetime enforcement
-            data['fred']['Date'] = pd.to_datetime(data['fred']['Date'], errors='coerce')
+            data['fred']['Date'] = pd.to_datetime(
+                data['fred']['Date'], errors='coerce')
             logger.info(f"\n✓ Loaded fred_features: {data['fred'].shape}")
-            logger.info(f"  Date range: {data['fred']['Date'].min().date()} to {data['fred']['Date'].max().date()}")
+            logger.info(
+                f"  Date range: {data['fred']['Date'].min().date()} to {data['fred']['Date'].max().date()}")
             logger.info(f"  Columns: {list(data['fred'].columns[:10])}...")
         else:
             logger.error(f"\n❌ fred_features.csv not found!")
-            raise FileNotFoundError(f"{fred_path} does not exist. Run Step 2 first.")
+            raise FileNotFoundError(
+                f"{fred_path} does not exist. Run Step 2 first.")
 
         # --- MARKET FEATURES ---
         market_path = self.features_dir / 'market_features.csv'
         if market_path.exists():
             data['market'] = pd.read_csv(market_path, parse_dates=['Date'])
             # ✅ Defensive datetime enforcement
-            data['market']['Date'] = pd.to_datetime(data['market']['Date'], errors='coerce')
+            data['market']['Date'] = pd.to_datetime(
+                data['market']['Date'], errors='coerce')
             logger.info(f"\n✓ Loaded market_features: {data['market'].shape}")
-            logger.info(f"  Date range: {data['market']['Date'].min().date()} to {data['market']['Date'].max().date()}")
+            logger.info(
+                f"  Date range: {data['market']['Date'].min().date()} to {data['market']['Date'].max().date()}")
             logger.info(f"  Columns: {list(data['market'].columns[:10])}...")
         else:
             logger.error(f"\n❌ market_features.csv not found!")
-            raise FileNotFoundError(f"{market_path} does not exist. Run Step 2 first.")
+            raise FileNotFoundError(
+                f"{market_path} does not exist. Run Step 2 first.")
 
         # --- COMPANY FEATURES ---
         company_path = self.features_dir / 'company_features.csv'
         if company_path.exists():
             data['company'] = pd.read_csv(company_path, parse_dates=['Date'])
             # ✅ Defensive datetime enforcement
-            data['company']['Date'] = pd.to_datetime(data['company']['Date'], errors='coerce')
-            logger.info(f"\n✓ Loaded company_features: {data['company'].shape}")
-            logger.info(f"  Date range: {data['company']['Date'].min().date()} to {data['company']['Date'].max().date()}")
+            data['company']['Date'] = pd.to_datetime(
+                data['company']['Date'], errors='coerce')
+            logger.info(
+                f"\n✓ Loaded company_features: {data['company'].shape}")
+            logger.info(
+                f"  Date range: {data['company']['Date'].min().date()} to {data['company']['Date'].max().date()}")
             logger.info(f"  Companies: {data['company']['Company'].nunique()}")
             logger.info(f"    {sorted(data['company']['Company'].unique())}")
         else:
             logger.error(f"\n❌ company_features.csv not found!")
-            raise FileNotFoundError(f"{company_path} does not exist. Run Step 2 first.")
+            raise FileNotFoundError(
+                f"{company_path} does not exist. Run Step 2 first.")
 
         return data
 
@@ -157,11 +167,11 @@ class DataMerger:
         Merge FRED and Market data for Pipeline 1 (VAE).
 
         Strategy: Outer join on Date to keep all dates from both datasets.
-        
+
         Args:
             fred_df: FRED features DataFrame
             market_df: Market features DataFrame
-            
+
         Returns:
             Merged DataFrame for VAE training
         """
@@ -170,21 +180,23 @@ class DataMerger:
         logger.info("="*80)
 
         logger.info(f"\nInput datasets:")
-        logger.info(f"  FRED:   {fred_df.shape} ({fred_df['Date'].min().date()} to {fred_df['Date'].max().date()})")
-        logger.info(f"  Market: {market_df.shape} ({market_df['Date'].min().date()} to {market_df['Date'].max().date()})")
+        logger.info(
+            f"  FRED:   {fred_df.shape} ({fred_df['Date'].min().date()} to {fred_df['Date'].max().date()})")
+        logger.info(
+            f"  Market: {market_df.shape} ({market_df['Date'].min().date()} to {market_df['Date'].max().date()})")
 
         # Check for overlapping date ranges
         fred_dates = set(fred_df['Date'])
         market_dates = set(market_df['Date'])
         overlap = len(fred_dates & market_dates)
-        
+
         logger.info(f"\n  Date overlap: {overlap:,} common dates")
         logger.info(f"  FRED-only dates: {len(fred_dates - market_dates):,}")
         logger.info(f"  Market-only dates: {len(market_dates - fred_dates):,}")
 
         # Merge on Date (outer join to keep all dates)
         logger.info(f"\nMerging on: Date (outer join)")
-        
+
         merged = pd.merge(
             fred_df,
             market_df,
@@ -198,16 +210,19 @@ class DataMerger:
         merged.reset_index(drop=True, inplace=True)
 
         logger.info(f"\n✓ Merged shape: {merged.shape}")
-        logger.info(f"  Date range: {merged['Date'].min().date()} to {merged['Date'].max().date()}")
+        logger.info(
+            f"  Date range: {merged['Date'].min().date()} to {merged['Date'].max().date()}")
         logger.info(f"  Total days: {len(merged):,}")
 
         # === CHECK FOR DUPLICATE COLUMNS ===
         logger.info(f"\nChecking for duplicate columns...")
-        
-        duplicate_cols = [col for col in merged.columns if col.endswith('_fred') or col.endswith('_market')]
-        
+
+        duplicate_cols = [col for col in merged.columns if col.endswith(
+            '_fred') or col.endswith('_market')]
+
         if duplicate_cols:
-            logger.warning(f"  ⚠️  Found {len(duplicate_cols)} duplicate columns with suffixes:")
+            logger.warning(
+                f"  ⚠️  Found {len(duplicate_cols)} duplicate columns with suffixes:")
             for col in duplicate_cols[:5]:
                 logger.warning(f"     - {col}")
             logger.info(f"  Note: These will be cleaned in Step 3c")
@@ -216,9 +231,10 @@ class DataMerger:
 
         # === CHECK FOR MISSING VALUES ===
         logger.info(f"\nChecking missing values after merge...")
-        
+
         missing_pct = (merged.isna().sum() / len(merged)) * 100
-        high_missing = missing_pct[missing_pct > 5].sort_values(ascending=False)
+        high_missing = missing_pct[missing_pct >
+                                   5].sort_values(ascending=False)
 
         if len(high_missing) > 0:
             logger.warning(f"\n  ⚠️  Columns with >5% missing values:")
@@ -237,10 +253,11 @@ class DataMerger:
 
         # === VERIFY KEY COLUMNS ===
         logger.info(f"\nVerifying key columns...")
-        
-        key_macro_cols = ['GDP', 'CPI', 'Unemployment_Rate', 'Federal_Funds_Rate']
+
+        key_macro_cols = ['GDP', 'CPI',
+                          'Unemployment_Rate', 'Federal_Funds_Rate']
         key_market_cols = ['VIX', 'SP500_Return_1D']
-        
+
         # Handle SP500_Close vs SP500
         if 'SP500_Close' in merged.columns:
             key_market_cols.append('SP500_Close')
@@ -262,7 +279,7 @@ class DataMerger:
     # ========== MERGE PIPELINE 2: MACRO + MARKET + COMPANY ==========
 
     def merge_pipeline2(self, fred_df: pd.DataFrame, market_df: pd.DataFrame,
-                       company_df: pd.DataFrame) -> pd.DataFrame:
+                        company_df: pd.DataFrame) -> pd.DataFrame:
         """
         Merge FRED, Market, and Company data for Pipeline 2 (XGBoost/LSTM).
 
@@ -270,22 +287,23 @@ class DataMerger:
         1. Merge FRED + Market on Date (same as Pipeline 1)
         2. Merge result with Company on Date
         3. This creates Company-Date observations with full macro context
-        
+
         Args:
             fred_df: FRED features
             market_df: Market features
             company_df: Company features
-            
+
         Returns:
             Merged DataFrame for prediction models
         """
         logger.info("\n" + "="*80)
-        logger.info("PIPELINE 2: MERGING FRED + MARKET + COMPANY (FOR XGBOOST/LSTM)")
+        logger.info(
+            "PIPELINE 2: MERGING FRED + MARKET + COMPANY (FOR XGBOOST/LSTM)")
         logger.info("="*80)
 
         # === STEP 1: Merge FRED + Market ===
         logger.info(f"\nStep 1: Merging FRED + Market...")
-        
+
         macro_market = pd.merge(
             fred_df,
             market_df,
@@ -293,7 +311,7 @@ class DataMerger:
             how='outer',
             suffixes=('_fred', '_market')
         )
-        
+
         macro_market.sort_values('Date', inplace=True)
         logger.info(f"  ✓ Macro+Market shape: {macro_market.shape}")
 
@@ -301,21 +319,24 @@ class DataMerger:
         logger.info(f"\nStep 2: Merging (Macro+Market) with Company data...")
         logger.info(f"  Company data shape: {company_df.shape}")
         logger.info(f"  Companies: {company_df['Company'].nunique()}")
-        logger.info(f"  Date range: {company_df['Date'].min().date()} to {company_df['Date'].max().date()}")
+        logger.info(
+            f"  Date range: {company_df['Date'].min().date()} to {company_df['Date'].max().date()}")
 
         # Check date alignment
         company_dates = set(company_df['Date'])
         macro_dates = set(macro_market['Date'])
         overlap = len(company_dates & macro_dates)
-        
+
         logger.info(f"\n  Date alignment check:")
         logger.info(f"    Common dates: {overlap:,}")
-        logger.info(f"    Company-only dates: {len(company_dates - macro_dates):,}")
-        logger.info(f"    Macro-only dates: {len(macro_dates - company_dates):,}")
+        logger.info(
+            f"    Company-only dates: {len(company_dates - macro_dates):,}")
+        logger.info(
+            f"    Macro-only dates: {len(macro_dates - company_dates):,}")
 
         # Merge on Date (left join - keep all company-date observations)
         logger.info(f"\nMerging on: Date (left join from Company)")
-        
+
         merged = pd.merge(
             company_df,
             macro_market,
@@ -330,8 +351,10 @@ class DataMerger:
 
         logger.info(f"\n✓ Final merged shape: {merged.shape}")
         logger.info(f"  Companies: {merged['Company'].nunique()}")
-        logger.info(f"  Date range: {merged['Date'].min().date()} to {merged['Date'].max().date()}")
-        logger.info(f"  Rows per company: ~{len(merged) / merged['Company'].nunique():.0f}")
+        logger.info(
+            f"  Date range: {merged['Date'].min().date()} to {merged['Date'].max().date()}")
+        logger.info(
+            f"  Rows per company: ~{len(merged) / merged['Company'].nunique():.0f}")
 
         # === MERGE QUALITY CHECK ===
         logger.info(f"\n" + "="*80)
@@ -339,7 +362,8 @@ class DataMerger:
         logger.info(f"="*80)
 
         # Check for missing values by source
-        company_cols = [col for col in company_df.columns if col not in ['Date', 'Company']]
+        company_cols = [
+            col for col in company_df.columns if col not in ['Date', 'Company']]
         fred_cols = [col for col in fred_df.columns if col not in ['Date']]
         market_cols = [col for col in market_df.columns if col not in ['Date']]
 
@@ -348,15 +372,18 @@ class DataMerger:
         logger.info(f"\nMissing values by source:")
 
         # Company features
-        company_missing = missing_pct[[col for col in company_cols if col in merged.columns]].mean() if company_cols else 0
+        company_missing = missing_pct[[
+            col for col in company_cols if col in merged.columns]].mean() if company_cols else 0
         logger.info(f"  Company features: {company_missing:.1f}% avg missing")
 
         # Macro features
-        macro_missing = missing_pct[[col for col in fred_cols if col in merged.columns]].mean() if fred_cols else 0
+        macro_missing = missing_pct[[
+            col for col in fred_cols if col in merged.columns]].mean() if fred_cols else 0
         logger.info(f"  Macro features:   {macro_missing:.1f}% avg missing")
 
         # Market features
-        market_missing = missing_pct[[col for col in market_cols if col in merged.columns]].mean() if market_cols else 0
+        market_missing = missing_pct[[
+            col for col in market_cols if col in merged.columns]].mean() if market_cols else 0
         logger.info(f"  Market features:  {market_missing:.1f}% avg missing")
 
         # Overall
@@ -365,7 +392,8 @@ class DataMerger:
 
         # === HANDLE MISSING VALUES FROM MERGE ===
         if total_missing > 1:
-            logger.info(f"\n  Filling missing values from merge misalignment...")
+            logger.info(
+                f"\n  Filling missing values from merge misalignment...")
 
             # For each company separately (to avoid cross-contamination)
             filled_dfs = []
@@ -386,7 +414,8 @@ class DataMerger:
             # Check after filling
             missing_after = (merged.isna().sum() / len(merged)) * 100
             total_missing_after = missing_after.mean()
-            logger.info(f"  ✓ Overall missing after fill: {total_missing_after:.2f}%")
+            logger.info(
+                f"  ✓ Overall missing after fill: {total_missing_after:.2f}%")
         else:
             logger.info(f"  ✓ Minimal missing values, no filling needed")
 
@@ -400,7 +429,8 @@ class DataMerger:
 
         logger.info(f"\nCompany: {sample_company}")
         logger.info(f"  Total rows: {len(sample_data):,}")
-        logger.info(f"  Date range: {sample_data['Date'].min().date()} to {sample_data['Date'].max().date()}")
+        logger.info(
+            f"  Date range: {sample_data['Date'].min().date()} to {sample_data['Date'].max().date()}")
 
         # Check key columns have data
         key_checks = {
@@ -417,23 +447,26 @@ class DataMerger:
             if col == 'Stock_Price' and col not in sample_data.columns:
                 if 'Close' in sample_data.columns:
                     check_col = 'Close'
-            
+
             if check_col in sample_data.columns:
                 avail_count = sample_data[check_col].notna().sum()
                 avail_pct = (avail_count / len(sample_data)) * 100
-                logger.info(f"    {col:20s} ({source:20s}): {avail_count:6,} rows ({avail_pct:5.1f}%)")
+                logger.info(
+                    f"    {col:20s} ({source:20s}): {avail_count:6,} rows ({avail_pct:5.1f}%)")
             else:
                 logger.warning(f"    {col:20s} ({source:20s}): ❌ NOT FOUND")
 
         # Show sample rows
         logger.info(f"\n  Sample rows (first 3):")
-        display_cols = ['Date', 'Company', 'Stock_Price', 'Revenue', 'GDP', 'VIX']
-        
+        display_cols = ['Date', 'Company',
+                        'Stock_Price', 'Revenue', 'GDP', 'VIX']
+
         # Handle alternative column names
         if 'Stock_Price' not in sample_data.columns and 'Close' in sample_data.columns:
             display_cols[display_cols.index('Stock_Price')] = 'Close'
-        
-        available_display = [col for col in display_cols if col in sample_data.columns]
+
+        available_display = [
+            col for col in display_cols if col in sample_data.columns]
         print(sample_data[available_display].head(3).to_string(index=False))
 
         return merged
@@ -443,14 +476,16 @@ class DataMerger:
     def check_duplicate_columns(self, df: pd.DataFrame, pipeline_name: str):
         """Check for duplicate columns with suffixes."""
         logger.info(f"\nChecking for duplicate columns in {pipeline_name}...")
-        
+
         # Look for common suffixes
         suffixes = ['_x', '_y', '_fred', '_market', '_macro', '_company']
-        duplicate_cols = [col for col in df.columns if any(col.endswith(suffix) for suffix in suffixes)]
-        
+        duplicate_cols = [col for col in df.columns if any(
+            col.endswith(suffix) for suffix in suffixes)]
+
         if duplicate_cols:
-            logger.warning(f"  ⚠️  Found {len(duplicate_cols)} columns with suffixes:")
-            
+            logger.warning(
+                f"  ⚠️  Found {len(duplicate_cols)} columns with suffixes:")
+
             # Group by base name
             dup_groups = {}
             for col in duplicate_cols:
@@ -460,14 +495,15 @@ class DataMerger:
                         if base not in dup_groups:
                             dup_groups[base] = []
                         dup_groups[base].append(col)
-            
+
             for base, cols in list(dup_groups.items())[:5]:  # Show first 5
                 logger.warning(f"     {base}: {cols}")
-            
+
             if len(dup_groups) > 5:
                 logger.warning(f"     ... and {len(dup_groups) - 5} more")
-            
-            logger.info(f"  Note: These will be cleaned in Step 3c (Post-Merge Cleaning)")
+
+            logger.info(
+                f"  Note: These will be cleaned in Step 3c (Post-Merge Cleaning)")
         else:
             logger.info(f"  ✓ No duplicate columns with suffixes")
 
@@ -482,24 +518,26 @@ class DataMerger:
         # === Save Pipeline 1 ===
         pipeline1_path = self.features_dir / 'macro_features.csv'
         pipeline1_df.to_csv(pipeline1_path, index=False)
-        
+
         logger.info(f"\n✓ Saved Pipeline 1 (VAE):")
         logger.info(f"  Path:  {pipeline1_path}")
         logger.info(f"  Shape: {pipeline1_df.shape}")
-        logger.info(f"  Size:  {pipeline1_path.stat().st_size / 1024 / 1024:.2f} MB")
+        logger.info(
+            f"  Size:  {pipeline1_path.stat().st_size / 1024 / 1024:.2f} MB")
 
         # === Save Pipeline 2 ===
         pipeline2_path = self.features_dir / 'merged_features.csv'
         pipeline2_df.to_csv(pipeline2_path, index=False)
-        
+
         logger.info(f"\n✓ Saved Pipeline 2 (XGBoost/LSTM):")
         logger.info(f"  Path:  {pipeline2_path}")
         logger.info(f"  Shape: {pipeline2_df.shape}")
-        logger.info(f"  Size:  {pipeline2_path.stat().st_size / 1024 / 1024:.2f} MB")
+        logger.info(
+            f"  Size:  {pipeline2_path.stat().st_size / 1024 / 1024:.2f} MB")
 
         # === Save column lists for reference ===
         logger.info(f"\nSaving column lists for reference...")
-        
+
         with open(self.features_dir / 'pipeline1_columns.txt', 'w') as f:
             f.write("PIPELINE 1 (VAE) - COLUMN LIST\n")
             f.write("="*80 + "\n\n")
@@ -519,11 +557,11 @@ class DataMerger:
     # ========== GENERATE MERGE REPORT ==========
 
     def generate_merge_report(self, fred_df: pd.DataFrame, market_df: pd.DataFrame,
-                            company_df: pd.DataFrame, pipeline1_df: pd.DataFrame,
-                            pipeline2_df: pd.DataFrame):
+                              company_df: pd.DataFrame, pipeline1_df: pd.DataFrame,
+                              pipeline2_df: pd.DataFrame):
         """Generate detailed merge quality report."""
         logger.info(f"\nGenerating merge quality report...")
-        
+
         report_data = []
 
         # Pipeline 1 stats
@@ -551,9 +589,9 @@ class DataMerger:
         report_df = pd.DataFrame(report_data)
         report_path = self.reports_dir / 'step3_merge_report.csv'
         report_df.to_csv(report_path, index=False)
-        
+
         logger.info(f"  ✓ Report saved: {report_path}")
-        
+
         return report_df
 
     # ========== MAIN PIPELINE ==========
@@ -565,7 +603,8 @@ class DataMerger:
         logger.info("="*80)
         logger.info("\nCreating two merged datasets:")
         logger.info("  1. macro_features.csv (FRED + Market) for VAE")
-        logger.info("  2. merged_features.csv (FRED + Market + Company) for XGBoost/LSTM")
+        logger.info(
+            "  2. merged_features.csv (FRED + Market + Company) for XGBoost/LSTM")
         logger.info("="*80)
 
         overall_start = time.time()
@@ -575,13 +614,14 @@ class DataMerger:
 
         # === MERGE PIPELINE 1: FRED + Market ===
         pipeline1_merged = self.merge_pipeline1(data['fred'], data['market'])
-        
+
         # Check for duplicates
         self.check_duplicate_columns(pipeline1_merged, "Pipeline 1")
 
         # === MERGE PIPELINE 2: FRED + Market + Company ===
-        pipeline2_merged = self.merge_pipeline2(data['fred'], data['market'], data['company'])
-        
+        pipeline2_merged = self.merge_pipeline2(
+            data['fred'], data['market'], data['company'])
+
         # Check for duplicates
         self.check_duplicate_columns(pipeline2_merged, "Pipeline 2")
 
@@ -606,18 +646,22 @@ class DataMerger:
         logger.info(f"\n📊 PIPELINE 1 (VAE - Scenario Generation):")
         logger.info(f"  Dataset:    macro_features.csv")
         logger.info(f"  Purpose:    Train VAE to generate stress scenarios")
-        logger.info(f"  Shape:      {pipeline1_merged.shape[0]:,} rows × {pipeline1_merged.shape[1]} columns")
+        logger.info(
+            f"  Shape:      {pipeline1_merged.shape[0]:,} rows × {pipeline1_merged.shape[1]} columns")
         logger.info(f"  Frequency:  Daily")
-        logger.info(f"  Date range: {pipeline1_merged['Date'].min().date()} to {pipeline1_merged['Date'].max().date()}")
+        logger.info(
+            f"  Date range: {pipeline1_merged['Date'].min().date()} to {pipeline1_merged['Date'].max().date()}")
         logger.info(f"  Features:   Macro + Market indicators")
 
         logger.info(f"\n📊 PIPELINE 2 (XGBoost/LSTM - Prediction):")
         logger.info(f"  Dataset:    merged_features.csv")
         logger.info(f"  Purpose:    Train models to predict company outcomes")
-        logger.info(f"  Shape:      {pipeline2_merged.shape[0]:,} rows × {pipeline2_merged.shape[1]} columns")
+        logger.info(
+            f"  Shape:      {pipeline2_merged.shape[0]:,} rows × {pipeline2_merged.shape[1]} columns")
         logger.info(f"  Frequency:  Daily")
         logger.info(f"  Companies:  {pipeline2_merged['Company'].nunique()}")
-        logger.info(f"  Date range: {pipeline2_merged['Date'].min().date()} to {pipeline2_merged['Date'].max().date()}")
+        logger.info(
+            f"  Date range: {pipeline2_merged['Date'].min().date()} to {pipeline2_merged['Date'].max().date()}")
         logger.info(f"  Features:   Macro + Market + Company indicators")
 
         logger.info(f"\n⏱️  Total Time: {elapsed:.1f}s ({elapsed/60:.1f} min)")
@@ -625,9 +669,12 @@ class DataMerger:
 
         logger.info("\n✅ Step 3 Complete!")
         logger.info("\n➡️  Next Steps:")
-        logger.info("   1. Validate merged data: python src/validation/validate_checkpoint_3_merged.py")
-        logger.info("   2. Clean merged data: python step3c_post_merge_cleaning.py")
-        logger.info("   3. Then interaction features: python step3b_interaction_features.py")
+        logger.info(
+            "   1. Validate merged data: python src/validation/validate_checkpoint_3_merged.py")
+        logger.info(
+            "   2. Clean merged data: python step3c_post_merge_cleaning.py")
+        logger.info(
+            "   3. Then interaction features: python step3b_interaction_features.py")
 
         return pipeline1_merged, pipeline2_merged
 
@@ -645,49 +692,57 @@ def main():
         logger.info("SAMPLE DATA PREVIEW")
         logger.info("="*80)
 
-        logger.info("\n1. PIPELINE 1 (macro_features.csv) - First 5 rows, key columns:")
-        p1_cols = ['Date', 'GDP', 'CPI', 'Unemployment_Rate', 'VIX', 'SP500_Return_1D']
-        available_p1_cols = [col for col in p1_cols if col in pipeline1.columns]
+        logger.info(
+            "\n1. PIPELINE 1 (macro_features.csv) - First 5 rows, key columns:")
+        p1_cols = ['Date', 'GDP', 'CPI',
+                   'Unemployment_Rate', 'VIX', 'SP500_Return_1D']
+        available_p1_cols = [
+            col for col in p1_cols if col in pipeline1.columns]
         print(pipeline1[available_p1_cols].head().to_string())
 
-        logger.info("\n2. PIPELINE 2 (merged_features.csv) - First 5 rows, key columns:")
-        p2_cols = ['Date', 'Company', 'Stock_Price', 'Revenue', 'GDP', 'VIX', 'Stock_Return_1D']
-        
+        logger.info(
+            "\n2. PIPELINE 2 (merged_features.csv) - First 5 rows, key columns:")
+        p2_cols = ['Date', 'Company', 'Stock_Price',
+                   'Revenue', 'GDP', 'VIX', 'Stock_Return_1D']
+
         # Handle alternative column names
         if 'Stock_Price' not in pipeline2.columns and 'Close' in pipeline2.columns:
             p2_cols[p2_cols.index('Stock_Price')] = 'Close'
-        
-        available_p2_cols = [col for col in p2_cols if col in pipeline2.columns]
+
+        available_p2_cols = [
+            col for col in p2_cols if col in pipeline2.columns]
         print(pipeline2[available_p2_cols].head().to_string())
 
         logger.info("\n" + "="*80)
         logger.info("COLUMN COUNT BY DATASET")
         logger.info("="*80)
-        logger.info(f"Pipeline 1 (macro_features):  {len(pipeline1.columns)} columns")
-        logger.info(f"Pipeline 2 (merged_features): {len(pipeline2.columns)} columns")
+        logger.info(
+            f"Pipeline 1 (macro_features):  {len(pipeline1.columns)} columns")
+        logger.info(
+            f"Pipeline 2 (merged_features): {len(pipeline2.columns)} columns")
 
         # Show feature categories
         logger.info("\n" + "="*80)
         logger.info("FEATURE CATEGORIES IN PIPELINE 2")
         logger.info("="*80)
-        
+
         # Count features by category
         macro_features = [col for col in pipeline2.columns if any(
             keyword in col for keyword in ['GDP', 'CPI', 'Unemployment', 'Federal', 'Inflation']
         )]
-        
+
         market_features = [col for col in pipeline2.columns if any(
             keyword in col for keyword in ['VIX', 'SP500']
         )]
-        
+
         stock_features = [col for col in pipeline2.columns if any(
             keyword in col for keyword in ['Stock', 'Close', 'Volume', 'RSI', 'MACD']
         )]
-        
+
         financial_features = [col for col in pipeline2.columns if any(
             keyword in col for keyword in ['Revenue', 'Income', 'Assets', 'Debt', 'Equity', 'ROE', 'ROA', 'Margin']
         )]
-        
+
         logger.info(f"Macro features:     {len(macro_features)}")
         logger.info(f"Market features:    {len(market_features)}")
         logger.info(f"Stock features:     {len(stock_features)}")

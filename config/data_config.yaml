@@ -1,0 +1,38 @@
+# File: configs/data_config.yaml
+
+# Data paths
+data:
+  raw_file: "data/features/merged_features_clean_with_anomaly_flags_with_drift_flags.csv"
+  processed_dir: "data/processed"
+
+# Column names
+columns:
+  date: "Date"
+  company: "Company"
+
+# Target variables (what to predict - next quarter)
+targets:
+  - Revenue
+  - Debt_to_Equity
+  - Profit_Margin
+  - Stock_Price
+
+# Train/test split
+split:
+  train_end_date: "2022-12-31"
+  method: "temporal"  # temporal or random
+
+# Feature engineering
+features:
+  exclude_patterns:
+    - "_anomaly"
+    - "_drift"
+    - "Unnamed"
+  
+  # Option to manually select features (leave empty to use all)
+  selected_features: []
+
+# Data quality
+quality:
+  missing_threshold: 0.3  # Drop columns with >30% missing
+  drop_duplicates: true

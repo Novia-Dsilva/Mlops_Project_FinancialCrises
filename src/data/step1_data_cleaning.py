@@ -41,7 +41,7 @@ class PointInTimeDataCleaner:
     # Reporting lags (days after quarter-end when data becomes available)
     REPORTING_LAGS = {
         'earnings': 45,      # Earnings reported ~45 days after quarter end
-        'balance_sheet': 45, # Balance sheet same as earnings
+        'balance_sheet': 45,  # Balance sheet same as earnings
         'macro': 30          # Macro data (GDP, CPI) ~30 days lag
     }
 
@@ -73,7 +73,8 @@ class PointInTimeDataCleaner:
 
             stats['date_min'] = str(df['Date'].min())
             stats['date_max'] = str(df['Date'].max())
-            stats['date_range_days'] = (df['Date'].max() - df['Date'].min()).days
+            stats['date_range_days'] = (
+                df['Date'].max() - df['Date'].min()).days
 
         # Missing values
         missing = df.isna().sum()
@@ -83,7 +84,8 @@ class PointInTimeDataCleaner:
 
         # Duplicates
         if 'Date' in df.columns and 'Company' in df.columns:
-            stats['duplicates'] = df.duplicated(subset=['Date', 'Company']).sum()
+            stats['duplicates'] = df.duplicated(
+                subset=['Date', 'Company']).sum()
         elif 'Date' in df.columns:
             stats['duplicates'] = df.duplicated(subset=['Date']).sum()
         else:
@@ -129,16 +131,19 @@ class PointInTimeDataCleaner:
             if isinstance(before_val, (int, float)) and isinstance(after_val, (int, float)):
                 change = after_val - before_val
                 if isinstance(before_val, float):
-                    print(f"{label:<30} {before_val:>15.2f} {after_val:>15.2f} {change:>15.2f}")
+                    print(
+                        f"{label:<30} {before_val:>15.2f} {after_val:>15.2f} {change:>15.2f}")
                 else:
-                    print(f"{label:<30} {before_val:>15,} {after_val:>15,} {change:>15,}")
+                    print(
+                        f"{label:<30} {before_val:>15,} {after_val:>15,} {change:>15,}")
             else:
-                print(f"{label:<30} {str(before_val):>15} {str(after_val):>15} {'':>15}")
+                print(
+                    f"{label:<30} {str(before_val):>15} {str(after_val):>15} {'':>15}")
 
     # ========== POINT-IN-TIME FUNCTIONS ==========
 
     def apply_reporting_lag(self, df: pd.DataFrame, lag_days: int,
-                           group_col: str = None) -> pd.DataFrame:
+                            group_col: str = None) -> pd.DataFrame:
         """
         Apply reporting lag to quarterly data for point-in-time correctness.
 
@@ -150,7 +155,8 @@ class PointInTimeDataCleaner:
             lag_days: Number of days after quarter-end when data is available
             group_col: If provided, shift within groups (e.g., per Company)
         """
-        logger.info(f"\n⏰ Applying {lag_days}-day reporting lag for point-in-time correctness...")
+        logger.info(
+            f"\n⏰ Applying {lag_days}-day reporting lag for point-in-time correctness...")
 
         df = df.copy()
 
@@ -160,7 +166,8 @@ class PointInTimeDataCleaner:
         # Log the transformation
         example_date = pd.Timestamp('2020-03-31')
         example_available = example_date + pd.Timedelta(days=lag_days)
-        logger.info(f"  Example: Q1 2020 (3/31) → Available on {example_available.date()}")
+        logger.info(
+            f"  Example: Q1 2020 (3/31) → Available on {example_available.date()}")
 
         return df
 
@@ -194,8 +201,10 @@ class PointInTimeDataCleaner:
                     if group_data.isna().any():
                         valid_data = group_data.dropna()
                         if len(valid_data) > 0:
-                            fill_value = valid_data.head(min(10, len(valid_data))).median()
-                            df.loc[group_mask, col] = df.loc[group_mask, col].fillna(fill_value)
+                            fill_value = valid_data.head(
+                                min(10, len(valid_data))).median()
+                            df.loc[group_mask, col] = df.loc[group_mask,
+                                                             col].fillna(fill_value)
         else:
             # Fill entire dataset
             df = df.set_index(date_col) if date_col in df.columns else df
@@ -208,7 +217,8 @@ class PointInTimeDataCleaner:
                 if df[col].isna().any():
                     valid_data = df[col].dropna()
                     if len(valid_data) > 0:
-                        fill_value = valid_data.head(min(10, len(valid_data))).median()
+                        fill_value = valid_data.head(
+                            min(10, len(valid_data))).median()
                         df[col] = df[col].fillna(fill_value)
 
             if date_col in df.index.names or df.index.name == date_col:
@@ -217,7 +227,8 @@ class PointInTimeDataCleaner:
         # Log what was filled
         filled_count = df_original.isna().sum().sum() - df.isna().sum().sum()
         if filled_count > 0:
-            logger.info(f"  ✓ Filled {filled_count} null values (forward fill + median for leading NaNs)")
+            logger.info(
+                f"  ✓ Filled {filled_count} null values (forward fill + median for leading NaNs)")
 
         return df
 
@@ -236,13 +247,14 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\nBEFORE CLEANING:")
         logger.info(f"  Shape: {df.shape}")
-        logger.info(f"  Missing values: {df.isna().sum().sum()} ({before_stats['missing_pct']}%)")
+        logger.info(
+            f"  Missing values: {df.isna().sum().sum()} ({before_stats['missing_pct']}%)")
         logger.info(f"  Duplicates: {before_stats['duplicates']}")
 
         # Standardize column names
         if 'DATE' in df.columns:
             df.rename(columns={'DATE': 'Date'}, inplace=True)
-        
+
         df['Date'] = pd.to_datetime(df['Date'])
         df.sort_values('Date', inplace=True)
 
@@ -257,7 +269,8 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\nAFTER CLEANING:")
         logger.info(f"  Shape: {df.shape}")
-        logger.info(f"  Missing values: {df.isna().sum().sum()} ({after_stats['missing_pct']}%)")
+        logger.info(
+            f"  Missing values: {df.isna().sum().sum()} ({after_stats['missing_pct']}%)")
         logger.info(f"  Duplicates: {after_stats['duplicates']}")
 
         # Save
@@ -280,7 +293,8 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\nBEFORE CLEANING:")
         logger.info(f"  Shape: {df.shape}")
-        logger.info(f"  Missing: {before_stats['total_missing']} ({before_stats['missing_pct']}%)")
+        logger.info(
+            f"  Missing: {before_stats['total_missing']} ({before_stats['missing_pct']}%)")
 
         # Parse date
         df['Date'] = pd.to_datetime(df['Date'])
@@ -301,7 +315,8 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\nAFTER CLEANING:")
         logger.info(f"  Shape: {df.shape}")
-        logger.info(f"  Missing: {after_stats['total_missing']} ({after_stats['missing_pct']}%)")
+        logger.info(
+            f"  Missing: {after_stats['total_missing']} ({after_stats['missing_pct']}%)")
 
         output_path = self.clean_dir / 'market_clean.csv'
         df.to_csv(output_path, index=False)
@@ -322,18 +337,21 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\nBEFORE CLEANING:")
         logger.info(f"  Shape: {df.shape}")
-        logger.info(f"  Companies: {df['Company'].nunique() if 'Company' in df.columns else 'N/A'}")
-        logger.info(f"  Missing: {before_stats['total_missing']} ({before_stats['missing_pct']}%)")
+        logger.info(
+            f"  Companies: {df['Company'].nunique() if 'Company' in df.columns else 'N/A'}")
+        logger.info(
+            f"  Missing: {before_stats['total_missing']} ({before_stats['missing_pct']}%)")
 
         # Parse date
         df['Date'] = pd.to_datetime(df['Date'])
 
         # Keep needed columns, use Adj_Close (accounts for splits/dividends)
-        keep_cols = ['Date', 'Close', 'Volume', 'Company', 'Company_Name', 'Sector']
-        
+        keep_cols = ['Date', 'Close', 'Volume',
+                     'Company', 'Company_Name', 'Sector']
+
         # Check which columns exist
         available_cols = [col for col in keep_cols if col in df.columns]
-        
+
         # Handle Adj Close if it exists
         if 'Adj Close' in df.columns:
             df['Stock_Price'] = df['Adj Close']
@@ -341,11 +359,11 @@ class PointInTimeDataCleaner:
             df['Stock_Price'] = df['Adj_Close']
         elif 'Close' in df.columns:
             df['Stock_Price'] = df['Close']
-        
+
         # Add Stock_Price to keep list
         if 'Stock_Price' not in available_cols:
             available_cols.append('Stock_Price')
-        
+
         # Keep only available columns
         df = df[available_cols].copy()
 
@@ -354,7 +372,8 @@ class PointInTimeDataCleaner:
 
         # Handle nulls per company (no reporting lag - prices are real-time)
         logger.info("\n  Stock prices are real-time (no reporting lag needed)")
-        df = self.handle_nulls_no_lookahead(df, date_col='Date', group_col='Company')
+        df = self.handle_nulls_no_lookahead(
+            df, date_col='Date', group_col='Company')
 
         # Remove duplicates
         df = df.drop_duplicates(subset=['Date', 'Company'], keep='last')
@@ -363,14 +382,15 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\nAFTER CLEANING:")
         logger.info(f"  Shape: {df.shape}")
-        logger.info(f"  Missing: {after_stats['total_missing']} ({after_stats['missing_pct']}%)")
+        logger.info(
+            f"  Missing: {after_stats['total_missing']} ({after_stats['missing_pct']}%)")
 
         # Per-company summary
         logger.info(f"\n  Per-company summary:")
         for company in df['Company'].unique()[:5]:  # Show first 5
             company_df = df[df['Company'] == company]
             logger.info(f"    {company}: {len(company_df):,} days, " +
-                       f"{company_df['Date'].min()} to {company_df['Date'].max()}")
+                        f"{company_df['Date'].min()} to {company_df['Date'].max()}")
 
         output_path = self.clean_dir / 'company_prices_clean.csv'
         df.to_csv(output_path, index=False)
@@ -391,38 +411,50 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\nBEFORE CLEANING:")
         logger.info(f"  Shape: {df.shape}")
-        logger.info(f"  Companies: {df['Company'].nunique() if 'Company' in df.columns else 'N/A'}")
-        logger.info(f"  Missing: {before_stats['total_missing']} ({before_stats['missing_pct']}%)")
+        logger.info(
+            f"  Companies: {df['Company'].nunique() if 'Company' in df.columns else 'N/A'}")
+        logger.info(
+            f"  Missing: {before_stats['total_missing']} ({before_stats['missing_pct']}%)")
 
         # Parse date
         df['Date'] = pd.to_datetime(df['Date'])
         df.sort_values(['Company', 'Date'], inplace=True)
 
         # CRITICAL: Apply 45-day reporting lag
-        logger.info(f"\n⏰ Applying {self.REPORTING_LAGS['balance_sheet']}-day reporting lag...")
-        logger.info("  Why: Balance sheets for Q1 (3/31) are filed ~45 days later (5/15)")
+        logger.info(
+            f"\n⏰ Applying {self.REPORTING_LAGS['balance_sheet']}-day reporting lag...")
+        logger.info(
+            "  Why: Balance sheets for Q1 (3/31) are filed ~45 days later (5/15)")
         logger.info("  Effect: Q1 data becomes 'available' on 5/15, not 3/31")
 
-        df = self.apply_reporting_lag(df, lag_days=self.REPORTING_LAGS['balance_sheet'])
+        df = self.apply_reporting_lag(
+            df, lag_days=self.REPORTING_LAGS['balance_sheet'])
 
         logger.info(f"\n  Example transformation:")
-        logger.info(f"    Q1 2020 (3/31) → Available {pd.Timestamp('2020-03-31') + pd.Timedelta(days=45)}")
-        logger.info(f"    Q2 2020 (6/30) → Available {pd.Timestamp('2020-06-30') + pd.Timedelta(days=45)}")
+        logger.info(
+            f"    Q1 2020 (3/31) → Available {pd.Timestamp('2020-03-31') + pd.Timedelta(days=45)}")
+        logger.info(
+            f"    Q2 2020 (6/30) → Available {pd.Timestamp('2020-06-30') + pd.Timedelta(days=45)}")
 
         # Handle missing Long_Term_Debt
         logger.info("\n  Handling missing Long_Term_Debt...")
-        before_ltd = df['Long_Term_Debt'].isna().sum() if 'Long_Term_Debt' in df.columns else 0
+        before_ltd = df['Long_Term_Debt'].isna().sum(
+        ) if 'Long_Term_Debt' in df.columns else 0
         if 'Long_Term_Debt' in df.columns:
-            df['Long_Term_Debt'] = df.groupby('Company')['Long_Term_Debt'].ffill()
-        after_ltd = df['Long_Term_Debt'].isna().sum() if 'Long_Term_Debt' in df.columns else 0
+            df['Long_Term_Debt'] = df.groupby(
+                'Company')['Long_Term_Debt'].ffill()
+        after_ltd = df['Long_Term_Debt'].isna().sum(
+        ) if 'Long_Term_Debt' in df.columns else 0
         logger.info(f"    Long_Term_Debt: {before_ltd} → {after_ltd} missing")
 
         # Calculate Total_Debt
         if 'Long_Term_Debt' in df.columns and 'Short_Term_Debt' in df.columns:
-            df['Total_Debt'] = df['Long_Term_Debt'].fillna(0) + df['Short_Term_Debt'].fillna(0)
+            df['Total_Debt'] = df['Long_Term_Debt'].fillna(
+                0) + df['Short_Term_Debt'].fillna(0)
 
         # Handle other nulls per company (forward fill only)
-        df = self.handle_nulls_no_lookahead(df, date_col='Date', group_col='Company')
+        df = self.handle_nulls_no_lookahead(
+            df, date_col='Date', group_col='Company')
 
         # Remove duplicates
         df = df.drop_duplicates(subset=['Date', 'Company'], keep='last')
@@ -431,7 +463,8 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\nAFTER CLEANING:")
         logger.info(f"  Shape: {df.shape}")
-        logger.info(f"  Missing: {after_stats['total_missing']} ({after_stats['missing_pct']}%)")
+        logger.info(
+            f"  Missing: {after_stats['total_missing']} ({after_stats['missing_pct']}%)")
 
         output_path = self.clean_dir / 'company_balance_clean.csv'
         df.to_csv(output_path, index=False)
@@ -480,7 +513,6 @@ class PointInTimeDataCleaner:
 
     #     return df, before_stats, after_stats
 
-
     def clean_income_statement(self) -> Tuple[pd.DataFrame, Dict, Dict]:
         """Clean income statement with 45-day reporting lag."""
         logger.info("\n" + "="*80)
@@ -494,8 +526,10 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\nBEFORE CLEANING:")
         logger.info(f"  Shape: {df.shape}")
-        logger.info(f"  Companies: {df['Company'].nunique() if 'Company' in df.columns else 'N/A'}")
-        logger.info(f"  Missing: {before_stats['total_missing']} ({before_stats['missing_pct']}%)")
+        logger.info(
+            f"  Companies: {df['Company'].nunique() if 'Company' in df.columns else 'N/A'}")
+        logger.info(
+            f"  Missing: {before_stats['total_missing']} ({before_stats['missing_pct']}%)")
 
         # Parse date
         df['Date'] = pd.to_datetime(df['Date'])
@@ -505,20 +539,23 @@ class PointInTimeDataCleaner:
         # HANDLE EPS COLUMN (was completely null in raw data - from checkpoint 1)
         # ============================================================================
         logger.info("\n💰 Handling EPS (Earnings Per Share) column...")
-        
+
         if 'EPS' in df.columns:
             null_count = df['EPS'].isna().sum()
             total_rows = len(df)
-            
+
             if null_count == total_rows:
                 # Completely null (expected from validation checkpoint)
-                logger.info(f"  ℹ️  EPS column is completely null ({null_count:,} rows)")
-                logger.info("      This is expected - EPS was filtered in validation checkpoint 1")
+                logger.info(
+                    f"  ℹ️  EPS column is completely null ({null_count:,} rows)")
+                logger.info(
+                    "      This is expected - EPS was filtered in validation checkpoint 1")
                 logger.info("      Filling with 0 as placeholder")
                 df['EPS'] = 0.0
             elif null_count > 0:
                 # Partially null
-                logger.info(f"  ℹ️  EPS has {null_count:,} null values ({null_count/total_rows*100:.1f}%)")
+                logger.info(
+                    f"  ℹ️  EPS has {null_count:,} null values ({null_count/total_rows*100:.1f}%)")
                 logger.info("      Filling nulls with 0")
                 df['EPS'] = df['EPS'].fillna(0.0)
             else:
@@ -529,38 +566,49 @@ class PointInTimeDataCleaner:
             logger.warning("  ⚠️  EPS column not found in data")
             logger.info("      Creating EPS column with value 0")
             df['EPS'] = 0.0
-        
-        logger.info(f"  ✓ EPS handling complete - {(df['EPS'] == 0).sum():,} rows have EPS=0")
-        logger.info("      Note: EPS will be calculated in feature engineering if possible")
+
+        logger.info(
+            f"  ✓ EPS handling complete - {(df['EPS'] == 0).sum():,} rows have EPS=0")
+        logger.info(
+            "      Note: EPS will be calculated in feature engineering if possible")
         # ============================================================================
 
         # Apply 45-day reporting lag
-        logger.info(f"\n⏰ Applying {self.REPORTING_LAGS['earnings']}-day reporting lag...")
-        logger.info("  Why: Earnings for Q1 (3/31) are reported ~45 days later (5/15)")
+        logger.info(
+            f"\n⏰ Applying {self.REPORTING_LAGS['earnings']}-day reporting lag...")
+        logger.info(
+            "  Why: Earnings for Q1 (3/31) are reported ~45 days later (5/15)")
         logger.info("  Effect: Q1 data becomes 'available' on 5/15, not 3/31")
-        
-        df = self.apply_reporting_lag(df, lag_days=self.REPORTING_LAGS['earnings'])
-        
+
+        df = self.apply_reporting_lag(
+            df, lag_days=self.REPORTING_LAGS['earnings'])
+
         logger.info(f"\n  Example transformation:")
-        logger.info(f"    Q1 2020 (3/31) → Available {pd.Timestamp('2020-03-31') + pd.Timedelta(days=45)}")
-        logger.info(f"    Q2 2020 (6/30) → Available {pd.Timestamp('2020-06-30') + pd.Timedelta(days=45)}")
+        logger.info(
+            f"    Q1 2020 (3/31) → Available {pd.Timestamp('2020-03-31') + pd.Timedelta(days=45)}")
+        logger.info(
+            f"    Q2 2020 (6/30) → Available {pd.Timestamp('2020-06-30') + pd.Timedelta(days=45)}")
 
         # Handle nulls per company (forward fill only)
-        logger.info("\n🔧 Handling remaining null values (forward fill only - no look-ahead)...")
-        df = self.handle_nulls_no_lookahead(df, date_col='Date', group_col='Company')
+        logger.info(
+            "\n🔧 Handling remaining null values (forward fill only - no look-ahead)...")
+        df = self.handle_nulls_no_lookahead(
+            df, date_col='Date', group_col='Company')
 
         # Remove duplicates
         original_count = len(df)
         df = df.drop_duplicates(subset=['Date', 'Company'], keep='last')
         if len(df) < original_count:
-            logger.info(f"  ℹ️  Removed {original_count - len(df):,} duplicate rows")
+            logger.info(
+                f"  ℹ️  Removed {original_count - len(df):,} duplicate rows")
 
         after_stats = self.compute_statistics(df, 'Income Statement')
 
         logger.info(f"\nAFTER CLEANING:")
         logger.info(f"  Shape: {df.shape}")
         logger.info(f"  Companies: {df['Company'].nunique()}")
-        logger.info(f"  Missing: {after_stats['total_missing']} ({after_stats['missing_pct']}%)")
+        logger.info(
+            f"  Missing: {after_stats['total_missing']} ({after_stats['missing_pct']}%)")
         logger.info(f"  Date range: {df['Date'].min()} to {df['Date'].max()}")
 
         # EPS summary statistics
@@ -568,11 +616,14 @@ class PointInTimeDataCleaner:
             eps_zero_count = (df['EPS'] == 0).sum()
             eps_nonzero_count = (df['EPS'] != 0).sum()
             logger.info(f"\n  EPS Summary:")
-            logger.info(f"    Zero values:     {eps_zero_count:,} ({eps_zero_count/len(df)*100:.1f}%)")
-            logger.info(f"    Non-zero values: {eps_nonzero_count:,} ({eps_nonzero_count/len(df)*100:.1f}%)")
+            logger.info(
+                f"    Zero values:     {eps_zero_count:,} ({eps_zero_count/len(df)*100:.1f}%)")
+            logger.info(
+                f"    Non-zero values: {eps_nonzero_count:,} ({eps_nonzero_count/len(df)*100:.1f}%)")
             if eps_nonzero_count > 0:
                 eps_nonzero = df[df['EPS'] != 0]['EPS']
-                logger.info(f"    Range (non-zero): {eps_nonzero.min():.2f} to {eps_nonzero.max():.2f}")
+                logger.info(
+                    f"    Range (non-zero): {eps_nonzero.min():.2f} to {eps_nonzero.max():.2f}")
                 logger.info(f"    Mean (non-zero):  {eps_nonzero.mean():.2f}")
 
         output_path = self.clean_dir / 'company_income_clean.csv'
@@ -631,7 +682,8 @@ class PointInTimeDataCleaner:
                     if col not in group_df.columns:
                         continue
 
-                    outliers = self.detect_outliers(group_df, col, method='iqr', threshold=3.0)
+                    outliers = self.detect_outliers(
+                        group_df, col, method='iqr', threshold=3.0)
                     n_outliers = outliers.sum()
 
                     if n_outliers > 0:
@@ -653,7 +705,8 @@ class PointInTimeDataCleaner:
                 if col not in df.columns:
                     continue
 
-                outliers = self.detect_outliers(df, col, method='iqr', threshold=3.0)
+                outliers = self.detect_outliers(
+                    df, col, method='iqr', threshold=3.0)
                 n_outliers = outliers.sum()
 
                 if n_outliers > 0:
@@ -674,11 +727,14 @@ class PointInTimeDataCleaner:
             logger.info(f"\n  ⚠️  Outliers detected (NOT removed):")
             print(outlier_df.to_string(index=False))
 
-            logger.info(f"\n  📌 Crisis years in data: 2008-2009 (Financial Crisis), 2020 (COVID)")
-            logger.info(f"     → Outliers during these years are EXPECTED and VALID")
+            logger.info(
+                f"\n  📌 Crisis years in data: 2008-2009 (Financial Crisis), 2020 (COVID)")
+            logger.info(
+                f"     → Outliers during these years are EXPECTED and VALID")
 
             # Save report
-            report_path = self.report_dir / f'{name.lower().replace(" ", "_")}_outliers.csv'
+            report_path = self.report_dir / \
+                f'{name.lower().replace(" ", "_")}_outliers.csv'
             outlier_df.to_csv(report_path, index=False)
             logger.info(f"\n  ✓ Outlier report saved: {report_path}")
 
@@ -688,7 +744,7 @@ class PointInTimeDataCleaner:
             return pd.DataFrame()
 
     def detect_outliers(self, df: pd.DataFrame, column: str,
-                       method: str = 'iqr', threshold: float = 3.0) -> pd.Series:
+                        method: str = 'iqr', threshold: float = 3.0) -> pd.Series:
         """Detect outliers using IQR method."""
         if column not in df.columns or df[column].isna().all():
             return pd.Series([False] * len(df), index=df.index)
@@ -712,14 +768,16 @@ class PointInTimeDataCleaner:
         logger.info("STEP 1: DATA CLEANING PIPELINE")
         logger.info("="*80)
         logger.info("\nKey Principles:")
-        logger.info("  1. Forward fill ONLY (no backward fill = no look-ahead bias)")
-        logger.info("  2. Apply reporting lags to quarterly financials (45 days)")
+        logger.info(
+            "  1. Forward fill ONLY (no backward fill = no look-ahead bias)")
+        logger.info(
+            "  2. Apply reporting lags to quarterly financials (45 days)")
         logger.info("  3. Detect outliers but DON'T remove (crises are real!)")
         logger.info("  4. Per-company handling (no cross-contamination)")
         logger.info("="*80)
 
         overall_start = time.time()
-        
+
         all_results = {}
         all_stats = {}
 
@@ -742,7 +800,8 @@ class PointInTimeDataCleaner:
         logger.info("\n[4/5] Cleaning Balance Sheet...")
         df_balance, before_balance, after_balance = self.clean_balance_sheet()
         all_results['balance'] = df_balance
-        all_stats['balance'] = {'before': before_balance, 'after': after_balance}
+        all_stats['balance'] = {
+            'before': before_balance, 'after': after_balance}
 
         logger.info("\n[5/5] Cleaning Income Statement...")
         df_income, before_income, after_income = self.clean_income_statement()
@@ -766,7 +825,8 @@ class PointInTimeDataCleaner:
 
         self.detect_and_report_outliers(
             df_fred, 'FRED',
-            columns_to_check=['GDP', 'CPI', 'Unemployment_Rate', 'Federal_Funds_Rate']
+            columns_to_check=['GDP', 'CPI',
+                              'Unemployment_Rate', 'Federal_Funds_Rate']
         )
 
         self.detect_and_report_outliers(
@@ -785,19 +845,24 @@ class PointInTimeDataCleaner:
         summary_report = self.save_statistics_report(all_stats)
 
         # ========== FINAL SUMMARY ==========
-        
+
         elapsed = time.time() - overall_start
 
         logger.info("\n\n" + "="*80)
         logger.info("STEP 1 COMPLETE - SUMMARY")
         logger.info("="*80)
-        
+
         logger.info(f"\n📊 DATA CLEANED:")
-        logger.info(f"  1. FRED:            {df_fred.shape[0]:,} rows × {df_fred.shape[1]} cols")
-        logger.info(f"  2. Market:          {df_market.shape[0]:,} rows × {df_market.shape[1]} cols")
-        logger.info(f"  3. Company Prices:  {df_prices.shape[0]:,} rows ({df_prices['Company'].nunique()} companies)")
-        logger.info(f"  4. Balance Sheets:  {df_balance.shape[0]:,} rows ({df_balance['Company'].nunique()} companies)")
-        logger.info(f"  5. Income Stmts:    {df_income.shape[0]:,} rows ({df_income['Company'].nunique()} companies)")
+        logger.info(
+            f"  1. FRED:            {df_fred.shape[0]:,} rows × {df_fred.shape[1]} cols")
+        logger.info(
+            f"  2. Market:          {df_market.shape[0]:,} rows × {df_market.shape[1]} cols")
+        logger.info(
+            f"  3. Company Prices:  {df_prices.shape[0]:,} rows ({df_prices['Company'].nunique()} companies)")
+        logger.info(
+            f"  4. Balance Sheets:  {df_balance.shape[0]:,} rows ({df_balance['Company'].nunique()} companies)")
+        logger.info(
+            f"  5. Income Stmts:    {df_income.shape[0]:,} rows ({df_income['Company'].nunique()} companies)")
 
         logger.info(f"\n📁 OUTPUT FILES (data/clean/):")
         logger.info(f"  - fred_clean.csv")
@@ -812,11 +877,13 @@ class PointInTimeDataCleaner:
 
         logger.info(f"\n⏱️  Total Time: {elapsed:.1f}s ({elapsed/60:.1f} min)")
         logger.info("="*80)
-        
+
         logger.info("\n✅ Step 1 Complete!")
         logger.info("\n➡️  Next Steps:")
-        logger.info("   1. Run validation: python src/validation/validate_checkpoint_2_clean.py")
-        logger.info("   2. If validation passes: python step2_feature_engineering.py")
+        logger.info(
+            "   1. Run validation: python src/validation/validate_checkpoint_2_clean.py")
+        logger.info(
+            "   2. If validation passes: python step2_feature_engineering.py")
 
         return all_results, all_stats
 
@@ -824,17 +891,18 @@ class PointInTimeDataCleaner:
 def main():
     """Execute Step 1: Data Cleaning."""
 
-    cleaner = PointInTimeDataCleaner(raw_dir="data/raw", clean_dir="data/clean")
-    
+    cleaner = PointInTimeDataCleaner(
+        raw_dir="data/raw", clean_dir="data/clean")
+
     try:
         cleaned_data, statistics = cleaner.clean_all()
-        
+
         logger.info("\n" + "="*80)
         logger.info("✅ STEP 1 SUCCESSFULLY COMPLETED")
         logger.info("="*80)
-        
+
         return cleaned_data, statistics
-        
+
     except FileNotFoundError as e:
         logger.error(f"\n❌ ERROR: {e}")
         logger.error("Make sure raw data files exist in data/raw/")

@@ -1,0 +1,66 @@
+# Multi-Task: Classification + Regression Configuration
+
+data:
+  data_path: "data/processed/labeled_data.csv"
+  
+  # CLASSIFICATION TARGET
+  classification_target: "Financial_Distress"
+  
+  # REGRESSION TARGETS (removed EPS_Next_Q)
+  regression_targets:
+    - "Revenue_Next_Q"
+    - "Debt_Equity_Next_Q"
+    - "Profit_Margin_Next_Q"
+    - "Stock_Price_Next_Q"
+  
+  # Current metric columns (to exclude from features - prevent leakage)
+  current_metrics:
+    - "Revenue"
+    - "Debt_to_Equity"
+    - "Profit_Margin"
+    - "Close"
+    # Removed EPS from here too
+  
+  # Columns to exclude from features
+  exclude_columns:
+    - "Date"
+    - "Company"
+    - "Ticker"
+    - "Financial_Distress"
+  
+  # Temporal split dates
+  train_end_date: "2022-12-31"
+  val_end_date: "2023-12-31"
+
+models:
+  xgboost_classification:
+    enabled: true
+    objective: "binary:logistic"
+    n_estimators: 100
+    max_depth: 5
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+  
+  xgboost_regression:
+    enabled: true
+    objective: "reg:squarederror"
+    n_estimators: 100
+    max_depth: 5
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+  
+  lstm:
+    enabled: false
+    sequence_length: 12
+    units: [128, 64]
+    dropout: 0.3
+    epochs: 100
+    batch_size: 32
+
+output:
+  models_dir: "models"
+  results_dir: "results"

@@ -1,0 +1,45 @@
+# File: configs/model_config.yaml
+
+# XGBoost configuration
+xgboost:
+  n_estimators: 100
+  max_depth: 6
+  learning_rate: 0.1
+  min_child_weight: 1
+  subsample: 0.8
+  colsample_bytree: 0.8
+  random_state: 42
+  verbosity: 0
+
+# LSTM configuration
+lstm:
+  architecture:
+    lstm_units: [64, 32]
+    dense_units: 64
+    dropout: 0.2
+    activation: "relu"
+  
+  optimizer:
+    name: "adam"
+    learning_rate: 0.001
+  
+  loss: "mse"
+
+# LSTM+GRU configuration
+lstm_gru:
+  architecture:
+    lstm_units: 64
+    gru_units: 32
+    dense_units: 64
+    dropout: 0.2
+    activation: "relu"
+  
+  optimizer:
+    name: "adam"
+    learning_rate: 0.001
+  
+  loss: "mse"
+
+# Preprocessing
+preprocessing:
+  scaler: "standard"  # standard or minmax
