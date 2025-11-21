@@ -1334,6 +1334,30 @@ fluent_datasources:
       merged_features_clean_20251112_193805_428953:
         type: dataframe
         batch_metadata: {}
+      fred_raw_20251111_160032_317414:
+        type: dataframe
+        batch_metadata: {}
+      market_raw_20251111_160032_768375:
+        type: dataframe
+        batch_metadata: {}
+      company_prices_raw_20251111_160033_302935:
+        type: dataframe
+        batch_metadata: {}
+      company_balance_raw_20251111_160033_764258:
+        type: dataframe
+        batch_metadata: {}
+      company_income_raw_20251111_160034_253759:
+        type: dataframe
+        batch_metadata: {}
+      fred_clean_20251111_160047_522220:
+        type: dataframe
+        batch_metadata: {}
+      macro_features_clean_20251111_160402_822578:
+        type: dataframe
+        batch_metadata: {}
+      merged_features_clean_20251111_160410_241456:
+        type: dataframe
+        batch_metadata: {}
 notebooks:
 include_rendered_content:
   globally: false
