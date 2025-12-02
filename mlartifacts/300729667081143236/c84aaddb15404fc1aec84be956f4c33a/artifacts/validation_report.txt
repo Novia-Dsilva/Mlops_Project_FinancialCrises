@@ -1,0 +1,52 @@
+============================================================
+DENSE VAE VALIDATION REPORT
+============================================================
+
+KS Test Pass Rate: 40.3%
+Correlation MAE: 0.1009
+Wasserstein Distance: 333.26
+
+Failed Features (p < 0.05):
+  - GDP: p=0.0190
+  - CPI: p=0.0034
+  - Federal_Funds_Rate: p=0.0000
+  - Yield_Curve_Spread: p=0.0043
+  - Oil_Price: p=0.0146
+  - Trade_Balance: p=0.0322
+  - Treasury_10Y_Yield: p=0.0366
+  - GDP_Lag1: p=0.0190
+  - GDP_Lag5: p=0.0190
+  - GDP_Lag22: p=0.0145
+  - CPI_Lag1: p=0.0036
+  - CPI_Lag5: p=0.0038
+  - CPI_Lag22: p=0.0038
+  - Federal_Funds_Rate_Lag1: p=0.0000
+  - Federal_Funds_Rate_Lag5: p=0.0000
+  - Federal_Funds_Rate_Lag22: p=0.0000
+  - Yield_Curve_Spread_Lag1: p=0.0028
+  - Yield_Curve_Spread_Lag5: p=0.0036
+  - Yield_Curve_Spread_Lag22: p=0.0077
+  - Oil_Price_Lag1: p=0.0154
+  - Oil_Price_Lag5: p=0.0225
+  - Oil_Price_Lag22: p=0.0164
+  - GDP_Growth_90D: p=0.0158
+  - Inflation: p=0.0000
+  - Federal_Funds_Rate_MA30: p=0.0000
+  - Federal_Funds_Rate_MA90: p=0.0000
+  - Oil_Price_MA30: p=0.0104
+  - Oil_Price_MA90: p=0.0272
+  - Oil_Price_Volatility_30D: p=0.0003
+  - Unemployment_Rate_Volatility_30D: p=0.0009
+  - Federal_Funds_Rate_Volatility_30D: p=0.0000
+  - Yield_Curve_Inverted: p=0.0000
+  - TED_Spread_High: p=0.0000
+  - SP500_Close: p=0.0064
+  - VIX_Lag22: p=0.0001
+  - VIX_MA22: p=0.0258
+  - VIX_MA90: p=0.0002
+  - VIX_Std22: p=0.0347
+  - VIX_Regime: p=0.0000
+  - SP500_MA50: p=0.0035
+  - SP500_MA200: p=0.0038
+  - SP500_Volatility_22D: p=0.0202
+  - SP500_Volatility_90D: p=0.0001

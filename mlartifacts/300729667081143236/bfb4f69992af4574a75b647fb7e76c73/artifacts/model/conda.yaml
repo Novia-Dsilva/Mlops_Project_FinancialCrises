@@ -1,0 +1,13 @@
+channels:
+- defaults
+- conda-forge
+dependencies:
+- python=3.9
+- pip
+- pip:
+  - mlflow
+  - torch
+  - numpy
+  - pandas
+  - scikit-learn
+name: ensemble_vae_env

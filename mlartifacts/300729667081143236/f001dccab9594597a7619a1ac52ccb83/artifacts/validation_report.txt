@@ -1,0 +1,22 @@
+============================================================
+DENSE VAE VALIDATION REPORT
+============================================================
+
+KS Test Pass Rate: 81.9%
+Correlation MAE: 0.0424
+Wasserstein Distance: 333.71
+
+Failed Features (p < 0.05):
+  - High_Yield_Spread: p=0.0005
+  - Inflation: p=0.0000
+  - Inflation_MA3M: p=0.0273
+  - Oil_Price_MA30: p=0.0496
+  - Oil_Price_Volatility_30D: p=0.0314
+  - Unemployment_Rate_Volatility_30D: p=0.0000
+  - Federal_Funds_Rate_Volatility_30D: p=0.0008
+  - Yield_Curve_Inverted: p=0.0000
+  - TED_Spread_High: p=0.0000
+  - VIX_Lag22: p=0.0248
+  - VIX_MA90: p=0.0101
+  - VIX_Regime: p=0.0000
+  - SP500_Volatility_90D: p=0.0257

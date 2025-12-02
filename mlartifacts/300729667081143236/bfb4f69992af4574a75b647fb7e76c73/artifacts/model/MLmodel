@@ -1,0 +1,19 @@
+artifact_path: model
+flavors:
+  python_function:
+    artifacts:
+      ensemble_package:
+        path: artifacts\ensemble_vae_complete.pth
+        uri: outputs/output_Ensemble_VAE/ensemble_vae_complete.pth
+    cloudpickle_version: 3.1.1
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.11.9
+mlflow_version: 2.10.2
+model_size_bytes: 2685885
+model_uuid: 37a32af531d44d65847a3ac096fd2d0b
+run_id: bfb4f69992af4574a75b647fb7e76c73
+utc_time_created: '2025-11-21 19:21:34.293466'

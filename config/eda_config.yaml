@@ -1,0 +1,203 @@
+eda:
+  data:
+    input_path: data/processed/features_engineered.csv
+    date_column: Date
+    crisis_flag_column: crisis_flag
+    company_column: Company
+    sector_column: Sector
+  output:
+    base_dir: outputs/eda
+    plots_dir: outputs/eda/plots
+    data_dir: outputs/eda/data
+    reports_dir: outputs/eda/reports
+  features:
+    risk_features:
+      financial_health:
+      - Debt_to_Equity
+      - Current_Ratio
+      - debt_to_assets
+      - net_margin
+      - ROE
+      - ROA
+      - roa
+      growth_performance:
+      - Revenue_growth_1q
+      - Revenue_growth_4q
+      - Net_Income_growth_1q
+      - eps_growth_1q
+      market_stress:
+      - vix_q_mean
+      - Financial_Stress_Index_mean
+      - composite_stress_score
+      macro_environment:
+      - GDP_last
+      - Unemployment_Rate_last
+      - CPI_last
+      - Yield_Curve_Spread_mean
+      - Federal_Funds_Rate_mean
+  analysis:
+    crisis_rate_threshold:
+      min: 1.0
+      max: 5.0
+    correlation_threshold: 0.8
+    outlier_zscore_threshold: 3
+    significance_level: 0.05
+    temporal_split:
+      train_end_year: 2018
+      val_start_year: 2019
+      val_end_year: 2021
+      test_start_year: 2022
+  visualization:
+    style: seaborn-v0_8-darkgrid
+    dpi: 300
+    figure_format: png
+    color_palette: husl
+snorkel:
+  data:
+    input_path: data/processed/features_engineered.csv
+    date_column: Date
+    company_column: Company
+    sector_column: Sector
+  output:
+    base_dir: outputs/snorkel
+    plots_dir: outputs/snorkel/plots
+    data_dir: outputs/snorkel/data
+    reports_dir: outputs/snorkel/reports
+    labeled_data_filename: snorkel_labeled_data.csv
+    labeled_only_filename: snorkel_labeled_only.csv
+    lf_summary_filename: lf_summary.csv
+    lf_analysis_filename: lf_detailed_analysis.csv
+  labels:
+    abstain: -1
+    not_at_risk: 0
+    at_risk: 1
+    cardinality: 2
+  thresholds:
+    # Market stress
+    vix_high: 30
+    vix_elevated: 25
+    vix_calm: 20
+    financial_stress_high: 1.5
+    composite_stress_high: 2.0
+    
+    # Revenue & growth
+    revenue_severe_decline: -0.15
+    revenue_decline_1q: -0.10
+    revenue_decline_4q: -0.05
+    revenue_growth_strong: 0.10
+    
+    # Profitability
+    net_margin_critical: 0.03
+    net_margin_low: 0.05
+    net_margin_healthy: 0.15
+    roa_low: 0.01
+    roe_low: 0.05
+    
+    # Leverage
+    debt_to_equity_critical: 3.5
+    debt_to_equity_high: 2.5
+    debt_to_equity_healthy: 1.5
+    current_ratio_low: 1.2
+    debt_to_assets_high: 0.6
+    
+    # Macro
+    unemployment_critical: 7.5
+    unemployment_high: 6.5
+    yield_curve_inverted: 0.0
+    gdp_decline: 0.0
+    
+    # Composite
+    perfect_storm_conditions: 3
+    
+  label_model:
+    epochs: 500
+    learning_rate: 0.01
+    seed: 42
+    log_freq: 100
+    optimizer: sgd
+    optimizer_config:
+      lr: 0.01
+      weight_decay: 0.0
+  quality:
+    min_coverage: 0.6
+    max_conflicts: 0.6
+    target_at_risk_rate_min: 0.01
+    target_at_risk_rate_max: 0.05
+    min_lf_coverage: 0.05
+    max_lf_conflicts: 0.8
+  validation:
+    crisis_periods:
+      financial_crisis_2008:
+        start_year: 2008
+        end_year: 2009
+        start_quarter: 3
+        end_quarter: 2
+        expected_at_risk_rate_min: 0.2
+        expected_at_risk_rate_max: 0.4
+      covid_crisis_2020:
+        start_year: 2020
+        end_year: 2020
+        start_quarter: 1
+        end_quarter: 2
+        expected_at_risk_rate_min: 0.15
+        expected_at_risk_rate_max: 0.35
+    normal_periods:
+    - years:
+      - 2015
+      - 2016
+      - 2017
+      expected_at_risk_rate_max: 0.03
+  labeling_functions:
+    categories:
+      market_stress:
+      - lf_extreme_vix
+      - lf_financial_stress_spike
+      - lf_composite_stress_high
+      revenue_decline:
+      - lf_revenue_collapse_1q
+      - lf_revenue_decline_4q
+      - lf_negative_growth_combo
+      - lf_severe_revenue_decline
+      profitability:
+      - lf_low_margin
+      - lf_poor_roa
+      - lf_profitability_crisis
+      - lf_critical_margin
+      leverage:
+      - lf_high_leverage
+      - lf_leverage_plus_declining_revenue
+      - lf_critical_leverage
+      - lf_low_liquidity
+      macro:
+      - lf_high_unemployment
+      - lf_inverted_yield_curve
+      - lf_critical_unemployment
+      composite:
+      - lf_perfect_storm
+      - lf_stress_plus_weak_fundamentals
+      - lf_recession_vulnerable
+      historical:
+      - lf_2008_crisis_period
+      - lf_2020_covid_crisis
+      negative:
+      - lf_strong_fundamentals
+      - lf_healthy_low_stress
+    enabled_categories:
+    - market_stress
+    - revenue_decline
+    - profitability
+    - leverage
+    - macro
+    - composite
+    - historical
+    - negative
+  metadata:
+    thresholds_updated_at: '2025-11-18T16:12:07.494926'
+    thresholds_source: auto_extracted_from_eda
+    eda_comparison_file: outputs/eda/data/crisis_vs_normal_comparison.csv
+logging:
+  level: INFO
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(funcName)s:%(lineno)d - %(message)s'
+  console: true
+  file: true
+  log_dir: logs

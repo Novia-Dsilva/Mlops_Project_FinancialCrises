@@ -1,0 +1,141 @@
+# Model 3: Anomaly Detection Configuration
+
+data:
+  labeled_data_path: "outputs/snorkel/data/snorkel_labeled_only.csv"
+  date_column: "Date"
+  target_column: "snorkel_label"
+  company_column: "Company"
+  sector_column: "Sector"
+  
+  feature_columns:
+    financial_health:
+      - Long_Term_Debt
+      - Short_Term_Debt
+      - Debt_to_Equity
+      - Current_Ratio
+      - Total_Debt
+      - Debt_to_Equity_lag_1q
+      - Current_Ratio_lag_1q
+      - Total_Debt_growth_1q
+    growth_performance:
+      - Revenue
+      - Net_Income
+      - Operating_Income
+      - EPS
+      - Revenue_lag_1q
+      - Net_Income_lag_1q
+      - Revenue_growth_1q
+      - Revenue_growth_4q
+      - Net_Income_growth_1q
+      - eps_growth_1q
+    market_stress:
+      - vix_q_mean
+      - vix_q_max
+      - vix_q_std
+      - Financial_Stress_Index_mean
+      - Financial_Stress_Index_max
+      - composite_stress_score
+      - vix_stress
+      - unemployment_stress
+      - leverage_x_vix
+      - revenue_decline_x_vix
+    macro_environment:
+      - GDP_last
+      - CPI_last
+      - Unemployment_Rate_last
+      - Federal_Funds_Rate_mean
+      - Yield_Curve_Spread_mean
+      - Treasury_10Y_Yield_mean
+      - High_Yield_Spread_mean
+      - yield_curve_inverted
+
+split:
+  method: "temporal"
+  train_end_year: 2018
+  val_start_year: 2019
+  val_end_year: 2021
+  test_start_year: 2022
+  random_seed: 42
+
+models:
+  isolation_forest:
+    enabled: true
+    params:
+      n_estimators: 100
+      max_samples: 256
+      contamination: 0.035
+      max_features: 1.0
+      bootstrap: false
+      random_state: 42
+    
+  local_outlier_factor:
+    enabled: true
+    params:
+      n_neighbors: 20
+      contamination: 0.035
+      metric: "minkowski"
+      p: 2
+      novelty: true
+    
+  one_class_svm:
+    enabled: true
+    params:
+      kernel: "rbf"
+      gamma: "scale"
+      nu: 0.035
+    
+  dbscan:
+    enabled: false
+    params:
+      eps: 0.5
+      min_samples: 5
+      metric: "euclidean"
+
+feature_engineering:
+  scaling: "standard"
+  handle_missing: "median"
+  handle_inf: true
+  remove_low_variance: true
+  variance_threshold: 0.01
+
+evaluation:
+  primary_metric: "roc_auc"
+  metrics:
+    - roc_auc
+    - precision_at_k
+    - recall_at_k
+    - f1_score
+    - average_precision
+  
+  precision_at_k: 0.10
+  
+  targets:
+    roc_auc_min: 0.85
+    precision_at_k_min: 0.80
+
+mlflow:
+  experiment_name: "financial_stress_model3_anomaly_detection"
+  tracking_uri: "mlruns"
+  run_name_prefix: "anomaly_detection"
+  
+  log_params: true
+  log_metrics: true
+  log_model: true
+  log_artifacts: true
+  
+  tags:
+    project: "Financial_Stress_Test_Generator"
+    model: "Model_3_Anomaly_Detection"
+    author: "Parth_Saraykar"
+    framework: "scikit-learn"
+
+output:
+  models_dir: "models/anomaly_detection"
+  results_dir: "outputs/models"
+  plots_dir: "outputs/models/plots"
+  reports_dir: "outputs/models/reports"
+
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  log_dir: "logs"
