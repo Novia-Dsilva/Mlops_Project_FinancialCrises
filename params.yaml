@@ -1,7 +1,7 @@
 # Pipeline Parameters
 
 data_collection:
-  start_date: '2005-01-01'
+  start_date: '1990-01-01'
   end_date: 'today'
   fred_series:
     - GDPC1
@@ -13,7 +13,27 @@ data_collection:
     - BAC
     - AAPL
     - MSFT
-    # ... add all 25
+    - GS
+    - MS
+    - C
+    - WFC
+    - USB
+    - PNC
+    - TFC
+    - BK
+    - AXP
+    - COF
+    - DFS
+    - SYF
+    - V
+    - MA
+    - PYPL
+    - BLK
+    - SCHW
+    - STT
+    - NTRS
+    - BEN
+    - IVZ
 
 data_cleaning:
   reporting_lag_days: 45
@@ -46,7 +66,17 @@ drift_detection:
     end: 2025
   significance_level: 0.05
 
+# Alert Configuration
 alerts:
-  slack_webhook: "https://hooks.slack.com/YOUR_WEBHOOK"  # ← UPDATE
+  # Email settings
   email_recipients:
-    - "team@example.com"  # ← UPDATE
+    - finance.stress.analyser@gmail.com
+  
+  sender_email: finance.stress.analyser@gmail.com
+  smtp_server: smtp.gmail.com
+  smtp_port: 587
+  
+  # Gmail App Password (DO NOT commit to git - use environment variable instead)
+  # Set via: export GMAIL_APP_PASSWORD='your-16-char-password'
+  # Or add to docker-compose.yml environment section
+  # gmail_app_password: 'xxxx-xxxx-xxxx-xxxx'  # NEVER commit this!

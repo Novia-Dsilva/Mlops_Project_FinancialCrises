@@ -21,11 +21,6 @@ standalone_admin_password.txt
 .dvc/cache/
 .dvc/tmp/
 
-# Data (tracked by DVC, not Git)
-data/raw/*.csv
-data/clean/*.csv
-data/features/*.csv
-data/processed/*.csv
 
 # Python
 __pycache__/

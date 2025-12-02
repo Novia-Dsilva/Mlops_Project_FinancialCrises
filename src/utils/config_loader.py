@@ -47,7 +47,7 @@ class Config:
     DVC_S3_BUCKET = os.getenv('DVC_S3_BUCKET', '')
     
     # ========== PIPELINE PARAMETERS ==========
-    START_DATE = os.getenv('START_DATE', '2005-01-01')
+    START_DATE = os.getenv('START_DATE', '1990-01-01')
     END_DATE = os.getenv('END_DATE', 'today')
     REPORTING_LAG_DAYS = int(os.getenv('REPORTING_LAG_DAYS', '45'))
     
