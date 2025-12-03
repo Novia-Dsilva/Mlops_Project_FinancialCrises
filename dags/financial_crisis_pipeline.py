@@ -32,6 +32,7 @@ except ImportError:
 
 # Pipeline steps configuration
 PIPELINE_STEPS = [
+<<<<<<< HEAD
     ('step0_collect_data', 'src/data/step0_data_collection.py',
      'Collect data from APIs', 90, True),
     ('validate_checkpoint_1', 'src/validation/validate_checkpoint_1_raw.py',
@@ -53,6 +54,16 @@ PIPELINE_STEPS = [
      'Detect anomalies', 10, False),
     ('step7_detect_drift', 'src/data/step7_drift_detection.py',
      'Detect drift', 10, False),
+=======
+    ('step0_collect_data', 'src/data/step0_data_collection.py', 'Collect data from APIs', 90, True),  # CHANGED: 30 -> 90
+    ('validate_checkpoint_1', 'src/validation/validate_checkpoint_1_raw.py', 'Validate raw data', 10, True),
+    ('step1_data_cleaning_and_merging', 'src/data/step1_data_cleaning_and_merging.py', 'Clean data (PIT correct)', 20, True),
+    ('validate_checkpoint_2', 'src/validation/validate_checkpoint_2_clean.py', 'Validate clean data', 10, True),
+    ('step2_feature_engineering', 'src/data/step2_feature_engineering.py', 'Engineer features', 20, False),
+    ('step3_bias_detection_with_explicit_slicing', 'src/data/step3_bias_detection_with_explicit_slicing.py', 'Detect bias', 10, False),
+    ('step4_anomaly_detection', 'src/data/step4_anomaly_detection.py', 'Detect anomalies', 10, False),
+    ('step5_drift_detection', 'src/data/step5_drift_detection.py', 'Detect drift', 10, False),
+>>>>>>> 8d1ecdb96c99c112cf86a9fd5fc949c4961a8f42
 ]
 
 # =======================================================================

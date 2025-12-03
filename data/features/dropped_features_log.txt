@@ -1,0 +1,112 @@
+================================================================================
+DROPPED FEATURES LOG
+================================================================================
+Date: 2025-12-03T18:45:09.018162
+Input file: data/features/quarterly_data_with_targets.csv
+Output file: data/features/quarterly_data_with_targets_clean.csv
+Original columns: 226
+Remaining columns: 147
+Dropped: 79
+
+================================================================================
+FEATURES DROPPED:
+================================================================================
+
+1. Revenue
+2. EPS
+3. Debt_to_Equity
+4. net_margin
+5. gross_margin
+6. operating_margin
+7. roa
+8. roe
+9. q_return
+10. next_q_return
+11. Revenue_growth_1q
+12. Revenue_growth_4q
+13. Net_Income_growth_1q
+14. Net_Income_growth_4q
+15. Gross_Profit_growth_1q
+16. Gross_Profit_growth_4q
+17. Operating_Income_growth_1q
+18. Operating_Income_growth_4q
+19. eps_growth_1q
+20. eps_growth_4q
+21. Net_Income
+22. Gross_Profit
+23. Operating_Income
+24. EBITDA
+25. Total_Debt
+26. Total_Assets
+27. Total_Liabilities
+28. Total_Equity
+29. Current_Assets
+30. Current_Liabilities
+31. Long_Term_Debt
+32. Short_Term_Debt
+33. Cash
+34. Current_Ratio
+35. Stock_Price
+36. q_price
+37. q_volume
+38. q_high
+39. q_low
+40. q_open
+41. q_price_range_pct
+42. Open
+43. High
+44. Low
+45. Close
+46. Adj_Close
+47. Volume
+48. pe_ratio
+49. debt_to_assets
+50. debt_to_ebitda
+51. cash_ratio
+52. revenue_acceleration
+53. net_margin_trend
+54. return_momentum
+55. revenue_declining
+56. high_leverage
+57. liquidity_risk
+58. composite_stress_score
+59. leverage_x_vix
+60. margin_x_market
+61. revenue_decline_x_vix
+62. excess_return
+63. return_vs_sector
+64. revenue_growth_vs_sector
+65. debt_x_rates
+66. net_margin_zscore
+67. roa_zscore
+68. roe_zscore
+69. debt_to_assets_zscore
+70. log_Revenue
+71. log_Total_Assets
+72. log_Total_Debt
+73. log_Cash
+74. crisis_flag
+75. Quarter_End_Date
+76. Original_Quarter_End
+77. Company_Name
+78. profit_margin_calculated
+79. return_calculated
+
+================================================================================
+TARGET COLUMNS PRESERVED:
+================================================================================
+
+✅ target_revenue
+✅ target_eps
+✅ target_debt_equity
+✅ target_profit_margin
+✅ target_stock_return
+
+================================================================================
+FEATURES NOT FOUND (already absent):
+================================================================================
+
+- net_margin_q
+- stock_q_return
+- Quarter_End_Date_fred
+- EPS_calculated

@@ -126,12 +126,12 @@ class LSTMTrainer:
     def __init__(
         self,
         target_name: str,
-        sequence_length: int = 8,
-        hidden_size: int = 64,
-        num_layers: int = 1,
+        sequence_length: int = 4,
+        hidden_size: int = 128,
+        num_layers: int = 2,
         learning_rate: float = 0.001,
         batch_size: int = 32,
-        epochs: int = 50,
+        epochs: int = 100,
         patience: int = 5
     ):
         """
