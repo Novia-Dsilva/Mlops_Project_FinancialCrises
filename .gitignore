@@ -38,3 +38,35 @@ outputs/
 # Credentials
 .env
 *.key
+
+# Airflow sensitive data
+configs/airflow_variables.json
+*.key
+*.pem
+
+# Model artifacts (too large)
+models/anomaly_detection/
+models/model3/
+mlruns/
+
+# Reports (generated files)
+reports/
+outputs/
+
+# Data (too large)
+data/features/
+data/raw/
+data/processed/
+
+# Logs
+logs/
+*.log
+
+# Backup files
+*.backup_*
+
+# Test scripts
+test_*.sh
+
+# Airflow variables
+configs/airflow_variables.json
