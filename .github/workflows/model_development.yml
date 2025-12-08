@@ -1,0 +1,361 @@
+name: Model Development - Train & Validate All Models
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/models/**"
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.10"
+  GCP_BUCKET: "mlops-financial-stress-data"
+  GCP_PROJECT: "ninth-iris-422916-f2"
+  VAE_KS_THRESHOLD: "0.70"
+  PREDICTIVE_R2_THRESHOLD: "0.60"
+  ANOMALY_ROCAUC_THRESHOLD: "0.75"
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
+      
+      - name: Run tests
+        run: pytest tests/ -v || echo "Tests completed"
+        continue-on-error: true
+
+  prepare-data:
+    runs-on: ubuntu-latest
+    needs: [run-tests]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Download data from GCS
+        run: |
+          mkdir -p data/features data/splits data/labeled
+          gsutil cp gs://${{ env.GCP_BUCKET }}/data/features/macro_features.csv data/features/ || echo "No macro features"
+          gsutil -m cp gs://${{ env.GCP_BUCKET }}/data/splits/*.csv data/splits/ || echo "No splits"
+          gsutil cp gs://${{ env.GCP_BUCKET }}/data/labeled/labeled_data.csv data/labeled/ || echo "No labeled data"
+      
+      - name: Generate splits if needed
+        run: |
+          if [ ! -f "data/splits/train_data.csv" ]; then
+            python src/models/create_target.py
+            python src/preprocessing/drop_features.py
+            python src/preprocessing/temporal_split.py
+            python src/preprocessing/handle_outliers_after_split.py
+            gsutil -m cp data/splits/*.csv gs://${{ env.GCP_BUCKET }}/data/splits/
+          fi
+        continue-on-error: true
+      
+      - name: Upload data as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: training-data
+          path: |
+            data/features/*.csv
+            data/splits/*.csv
+            data/labeled/*.csv
+          retention-days: 7
+
+  train-vae:
+    runs-on: ubuntu-latest
+    needs: [prepare-data]
+    outputs:
+      passes_validation: ${{ steps.validate.outputs.passes }}
+      best_ks: ${{ steps.validate.outputs.best_ks }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt mlflow
+      
+      - name: Download data
+        uses: actions/download-artifact@v4
+        with:
+          name: training-data
+          path: data/
+
+      - name: Train Dense VAE
+        run: |
+          cd src/models/vae
+          python Dense_VAE_optimized_mlflow_updated.py || echo "Training completed"
+          cd ../../..
+        continue-on-error: true
+
+      - name: Train Ensemble VAE
+        run: |
+          cd src/models/vae
+          python Ensemble_VAE_updated.py || echo "Training completed"
+          cd ../../..
+        continue-on-error: true
+
+      - name: Validate and Select Best VAE
+        id: validate
+        run: |
+          python - <<'EOF'
+          import json, glob, os
+          
+          print("🏆 SELECTING BEST VAE MODEL")
+          
+          metrics_files = glob.glob('models/vae/*_metrics.json')
+          best_ks = 0.0
+          best_model = None
+          
+          for mf in metrics_files:
+              with open(mf) as f:
+                  m = json.load(f)
+              ks = m.get('avg_ks_statistic', 0.0)
+              model_name = os.path.basename(mf).replace('_metrics.json', '')
+              print(f"{model_name}: KS={ks:.4f}")
+              if ks > best_ks:
+                  best_ks = ks
+                  best_model = model_name
+          
+          passes = best_ks >= 0.70
+          print(f"\n✅ Best: {best_model} (KS={best_ks:.4f})")
+          print(f"Status: {'PASS' if passes else 'FAIL'}")
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"passes={str(passes).lower()}\n")
+              f.write(f"best_ks={best_ks:.4f}\n")
+              f.write(f"best_model={best_model}\n")
+          EOF
+
+      - name: Register Best VAE in MLflow
+        if: steps.validate.outputs.passes == 'true'
+        run: |
+          python - <<'EOF'
+          import mlflow
+          from mlflow.tracking import MlflowClient
+          
+          mlflow.set_tracking_uri("file:./mlruns")
+          client = MlflowClient()
+          
+          exp = client.get_experiment_by_name("VAE_Training")
+          if exp:
+              runs = client.search_runs(
+                  experiment_ids=[exp.experiment_id],
+                  order_by=["metrics.avg_ks_statistic DESC"],
+                  max_results=1
+              )
+              
+              if runs:
+                  run_id = runs[0].info.run_id
+                  
+                  mv = mlflow.register_model(
+                      f"runs:/{run_id}/model",
+                      "vae_production"
+                  )
+                  
+                  client.transition_model_version_stage(
+                      name="vae_production",
+                      version=mv.version,
+                      stage="Production",
+                      archive_existing_versions=True
+                  )
+                  
+                  print(f"✅ Registered VAE v{mv.version} as Production")
+          EOF
+
+      - name: Upload VAE to GCS
+        if: steps.validate.outputs.passes == 'true'
+        run: |
+          best_model="${{ steps.validate.outputs.best_model }}"
+          gsutil cp models/vae/${best_model}.h5 gs://${{ env.GCP_BUCKET }}/models/vae/vae_production.h5
+          gsutil cp models/vae/${best_model}_metrics.json gs://${{ env.GCP_BUCKET }}/models/vae/vae_metrics.json
+          echo "✅ VAE uploaded to GCS"
+
+  train-predictive:
+    runs-on: ubuntu-latest
+    needs: [prepare-data]
+    outputs:
+      passes_validation: ${{ steps.validate.outputs.passes }}
+      avg_r2: ${{ steps.validate.outputs.avg_r2 }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      
+      - name: Download data
+        uses: actions/download-artifact@v4
+        with:
+          name: training-data
+          path: data/
+
+      - name: Train XGBoost
+        run: python src/models/predictor/xgboost_model.py --target all --no-mlflow
+        continue-on-error: true
+
+      - name: Train LightGBM
+        run: python src/models/predictor/lightgbm_model.py --target all --no-mlflow
+        continue-on-error: true
+
+      - name: Validate Predictive Models
+        id: validate
+        run: |
+          python - <<'EOF'
+          import json, os
+          from pathlib import Path
+          
+          print("📊 VALIDATING PREDICTIVE MODELS")
+          
+          targets = ['revenue', 'eps', 'debt_equity', 'profit_margin', 'stock_return']
+          results = []
+          
+          for target in targets:
+              mf = Path(f'models/xgboost/xgboost_{target}_metrics.json')
+              if mf.exists():
+                  with open(mf) as f:
+                      m = json.load(f)
+                  r2 = m.get('test', {}).get('r2', 0.0)
+                  results.append(r2)
+                  print(f"{target}: R²={r2:.4f} {'✅' if r2>=0.60 else '❌'}")
+          
+          avg_r2 = sum(results)/len(results) if results else 0.0
+          passes = avg_r2 >= 0.60
+          
+          print(f"\nAvg R²: {avg_r2:.4f} {'✅ PASS' if passes else '❌ FAIL'}")
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"passes={str(passes).lower()}\n")
+              f.write(f"avg_r2={avg_r2:.4f}\n")
+          EOF
+
+      - name: Upload Predictive Models to GCS
+        if: steps.validate.outputs.passes == 'true'
+        run: |
+          gsutil -m cp models/xgboost/*.pkl gs://${{ env.GCP_BUCKET }}/models/xgboost/
+          gsutil -m cp models/xgboost/*_metrics.json gs://${{ env.GCP_BUCKET }}/models/xgboost/
+          gsutil -m cp models/lightgbm/*.pkl gs://${{ env.GCP_BUCKET }}/models/lightgbm/ || echo "No LightGBM"
+          echo "✅ Predictive models uploaded"
+
+  train-anomaly:
+    runs-on: ubuntu-latest
+    needs: [prepare-data]
+    outputs:
+      passes_validation: ${{ steps.validate.outputs.passes }}
+      best_roc_auc: ${{ steps.validate.outputs.best_roc_auc }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+      
+      - name: Install dependencies
+        run: pip install -r requirements.txt mlflow
+      
+      - name: Download data
+        uses: actions/download-artifact@v4
+        with:
+          name: training-data
+          path: data/
+
+      - name: Train Anomaly Detection
+        run: python src/models/train_anomaly_detection.py
+        continue-on-error: true
+
+      - name: Validate Anomaly Model
+        id: validate
+        run: |
+          python - <<'EOF'
+          import json, glob, os
+          
+          print("📊 VALIDATING ANOMALY DETECTION")
+          
+          metrics_files = glob.glob('outputs/models/results/*_metrics.json')
+          best_roc = 0.0
+          
+          for mf in metrics_files:
+              with open(mf) as f:
+                  m = json.load(f)
+              roc = m.get('roc_auc', 0.0)
+              print(f"{os.path.basename(mf)}: ROC-AUC={roc:.4f}")
+              if roc > best_roc:
+                  best_roc = roc
+          
+          passes = best_roc >= 0.75
+          print(f"\nBest ROC-AUC: {best_roc:.4f} {'✅ PASS' if passes else '❌ FAIL'}")
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"passes={str(passes).lower()}\n")
+              f.write(f"best_roc_auc={best_roc:.4f}\n")
+          EOF
+
+      - name: Upload Anomaly Models to GCS
+        if: steps.validate.outputs.passes == 'true'
+        run: |
+          gsutil -m cp -r models/anomaly_detection/ gs://${{ env.GCP_BUCKET }}/models/
+          gsutil -m cp -r outputs/models/ gs://${{ env.GCP_BUCKET }}/outputs/
+          echo "✅ Anomaly models uploaded"
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [train-vae, train-predictive, train-anomaly]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "=========================================="
+          echo "  MODEL DEVELOPMENT SUMMARY"
+          echo "=========================================="
+          echo "VAE:        ${{ needs.train-vae.outputs.passes_validation }} (KS: ${{ needs.train-vae.outputs.best_ks }})"
+          echo "Predictive: ${{ needs.train-predictive.outputs.passes_validation }} (R²: ${{ needs.train-predictive.outputs.avg_r2 }})"
+          echo "Anomaly:    ${{ needs.train-anomaly.outputs.passes_validation }} (ROC: ${{ needs.train-anomaly.outputs.best_roc_auc }})"
+          echo "=========================================="

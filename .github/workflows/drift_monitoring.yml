@@ -1,0 +1,292 @@
+name: Drift Monitoring - Auto Retrain on Drift
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.10"
+  GCP_BUCKET: "mlops-financial-stress-data"
+  GCP_PROJECT: "ninth-iris-422916-f2"
+
+jobs:
+  monitor-vae:
+    runs-on: ubuntu-latest
+    outputs:
+      drift_detected: ${{ steps.check.outputs.drift }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Install dependencies
+        run: pip install tensorflow scipy numpy pandas google-cloud-storage
+
+      - name: Download model and data
+        run: |
+          mkdir -p models/vae data/reference
+          gsutil cp gs://${{ env.GCP_BUCKET }}/models/vae/vae_production.h5 models/vae/
+          gsutil cp gs://${{ env.GCP_BUCKET }}/data/features/macro_features.csv data/reference/
+
+      - name: Check VAE Drift
+        id: check
+        run: |
+          python - <<'EOF'
+          import tensorflow as tf
+          import pandas as pd
+          import numpy as np
+          from scipy import stats
+          import os
+          
+          print("🔍 VAE DRIFT CHECK - Reconstruction Test")
+          
+          # Load model and data
+          vae = tf.keras.models.load_model('models/vae/vae_production.h5', compile=False)
+          train_data = pd.read_csv('data/reference/macro_features.csv')
+          numeric_data = train_data.select_dtypes(include=[np.number])
+          
+          # Sample normal data
+          sample = numeric_data.sample(min(1000, len(numeric_data)))
+          
+          # Test reconstruction
+          encoder = vae.get_layer('encoder')
+          decoder = vae.get_layer('decoder')
+          
+          encoded = encoder.predict(sample.values, verbose=0)
+          z_mean = encoded[0] if isinstance(encoded, list) else encoded
+          reconstructed = decoder.predict(z_mean, verbose=0)
+          
+          # Calculate KS for each feature
+          ks_stats = []
+          for i in range(min(sample.shape[1], reconstructed.shape[1])):
+              ks, _ = stats.ks_2samp(sample.iloc[:, i], reconstructed[:, i])
+              ks_stats.append(ks)
+          
+          avg_ks = np.mean(ks_stats)
+          drift = avg_ks < 0.70
+          
+          print(f"Reconstruction KS: {avg_ks:.4f}")
+          print(f"Drift: {drift}")
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"drift={str(drift).lower()}\n")
+              f.write(f"ks={avg_ks:.4f}\n")
+          EOF
+
+  monitor-predictive:
+    runs-on: ubuntu-latest
+    outputs:
+      drift_detected: ${{ steps.check.outputs.drift }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Install dependencies
+        run: pip install xgboost numpy pandas joblib scikit-learn google-cloud-storage
+
+      - name: Download models and data
+        run: |
+          mkdir -p models/xgboost data/splits
+          gsutil -m cp gs://${{ env.GCP_BUCKET }}/models/xgboost/*.pkl models/xgboost/
+          gsutil -m cp gs://${{ env.GCP_BUCKET }}/models/xgboost/*.json models/xgboost/
+          gsutil cp gs://${{ env.GCP_BUCKET }}/data/splits/test_data.csv data/splits/
+
+      - name: Check Predictive Drift
+        id: check
+        run: |
+          python - <<'EOF'
+          import pandas as pd
+          import numpy as np
+          import joblib
+          import json
+          import os
+          from sklearn.metrics import r2_score
+          from pathlib import Path
+          
+          print("🔍 PREDICTIVE MODELS DRIFT CHECK - Performance Test")
+          
+          test_data = pd.read_csv('data/splits/test_data.csv')
+          targets = ['revenue', 'eps']  # Check main targets
+          
+          drift_count = 0
+          
+          for target in targets:
+              model_file = Path(f'models/xgboost/xgboost_{target}.pkl')
+              if not model_file.exists():
+                  continue
+              
+              # Load model
+              with open(model_file, 'rb') as f:
+                  model_data = joblib.load(f)
+              
+              model = model_data['model']
+              baseline_r2 = model_data['test_metrics']['r2']
+              
+              # Test on current data
+              target_col = f'target_{target}'
+              y_test = test_data[target_col].dropna()
+              X_test = test_data.loc[y_test.index].drop(columns=[c for c in test_data.columns if c.startswith('target_')])
+              
+              # Align features
+              for col in model_data['feature_names']:
+                  if col not in X_test.columns:
+                      X_test[col] = 0
+              X_test = X_test[model_data['feature_names']].fillna(0)
+              
+              # Predict
+              y_pred = model.predict(X_test)
+              current_r2 = r2_score(y_test, y_pred)
+              
+              r2_drop = baseline_r2 - current_r2
+              
+              print(f"\n{target}:")
+              print(f"  Baseline R²: {baseline_r2:.4f}")
+              print(f"  Current R²: {current_r2:.4f}")
+              print(f"  Drop: {r2_drop:.4f}")
+              
+              if current_r2 < 0.60 or r2_drop > 0.10:
+                  print(f"  ⚠️ DRIFT DETECTED")
+                  drift_count += 1
+              else:
+                  print(f"  ✅ Healthy")
+          
+          drift = drift_count > 0
+          print(f"\nOverall Drift: {drift}")
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"drift={str(drift).lower()}\n")
+          EOF
+
+  monitor-anomaly:
+    runs-on: ubuntu-latest
+    outputs:
+      drift_detected: ${{ steps.check.outputs.drift }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Authenticate to GCP
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Install dependencies
+        run: pip install numpy pandas joblib scikit-learn google-cloud-storage
+
+      - name: Download model and data
+        run: |
+          mkdir -p models/anomaly data/labeled
+          gsutil -m cp -r gs://${{ env.GCP_BUCKET }}/models/anomaly_detection/ models/anomaly/
+          gsutil cp gs://${{ env.GCP_BUCKET }}/data/labeled/labeled_data.csv data/labeled/
+
+      - name: Check Anomaly Drift
+        id: check
+        run: |
+          python - <<'EOF'
+          import pandas as pd
+          import numpy as np
+          import joblib
+          import os
+          from sklearn.metrics import roc_auc_score
+          from pathlib import Path
+          
+          print("🔍 ANOMALY DETECTION DRIFT CHECK - ROC-AUC Test")
+          
+          # Load labeled data
+          labeled_data = pd.read_csv('data/labeled/labeled_data.csv')
+          
+          # Split for validation
+          split_idx = int(len(labeled_data) * 0.8)
+          val_data = labeled_data.iloc[split_idx:]
+          
+          feature_cols = [c for c in val_data.columns if c not in ['AT_RISK', 'Date', 'Company', 'Sector']]
+          X_val = val_data[feature_cols].fillna(0)
+          y_val = val_data['AT_RISK'].values
+          
+          # Find best model
+          model_files = list(Path('models/anomaly').rglob('*.pkl'))
+          best_roc = 0.0
+          baseline_roc = 0.85  # Your training target
+          
+          for mf in model_files:
+              if 'scaler' in mf.name or 'features' in mf.name:
+                  continue
+              
+              try:
+                  with open(mf, 'rb') as f:
+                      model_data = joblib.load(f)
+                  
+                  model = model_data.get('model') or model_data
+                  
+                  # Load scaler
+                  scaler_path = mf.parent / 'scaler.pkl'
+                  if scaler_path.exists():
+                      with open(scaler_path, 'rb') as f:
+                          scaler = joblib.load(f)
+                      X_scaled = scaler.transform(X_val)
+                  else:
+                      X_scaled = X_val
+                  
+                  # Predict
+                  if hasattr(model, 'score_samples'):
+                      scores = model.score_samples(X_scaled)
+                  else:
+                      scores = -model.predict(X_scaled)
+                  
+                  roc = roc_auc_score(y_val, -scores)
+                  if roc > best_roc:
+                      best_roc = roc
+                  
+                  print(f"{mf.stem}: ROC-AUC={roc:.4f}")
+                  
+              except Exception as e:
+                  continue
+          
+          roc_drop = baseline_roc - best_roc
+          drift = best_roc < 0.75 or roc_drop > 0.05
+          
+          print(f"\nBest ROC-AUC: {best_roc:.4f}")
+          print(f"Drift: {drift}")
+          
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as f:
+              f.write(f"drift={str(drift).lower()}\n")
+              f.write(f"roc={best_roc:.4f}\n")
+          EOF
+
+  # If ANY drift detected, trigger development workflow
+  retrain-all:
+    needs: [monitor-vae, monitor-predictive, monitor-anomaly]
+    if: |
+      needs.monitor-vae.outputs.drift_detected == 'true' ||
+      needs.monitor-predictive.outputs.drift_detected == 'true' ||
+      needs.monitor-anomaly.outputs.drift_detected == 'true'
+    uses: ./.github/workflows/model_development.yml
+    secrets: inherit
+
+  summary:
+    runs-on: ubuntu-latest
+    needs: [monitor-vae, monitor-predictive, monitor-anomaly]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "DRIFT MONITORING SUMMARY"
+          echo "VAE: ${{ needs.monitor-vae.outputs.drift_detected }}"
+          echo "Predictive: ${{ needs.monitor-predictive.outputs.drift_detected }}"
+          echo "Anomaly: ${{ needs.monitor-anomaly.outputs.drift_detected }}"
